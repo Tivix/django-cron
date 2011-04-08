@@ -9,7 +9,7 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
         
         # Adding model 'CronJobLog'
-        db.create_table('cron_cronjoblog', (
+        db.create_table('django_cron_cronjoblog', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('code', self.gf('django.db.models.fields.CharField')(max_length=64, db_index=True)),
             ('start_time', self.gf('django.db.models.fields.DateTimeField')(db_index=True)),
@@ -17,17 +17,17 @@ class Migration(SchemaMigration):
             ('is_success', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('message', self.gf('django.db.models.fields.TextField')(db_index=True, max_length=1000, blank=True)),
         ))
-        db.send_create_signal('cron', ['CronJobLog'])
+        db.send_create_signal('django_cron', ['CronJobLog'])
 
 
     def backwards(self, orm):
         
         # Deleting model 'CronJobLog'
-        db.delete_table('cron_cronjoblog')
+        db.delete_table('django_cron_cronjoblog')
 
 
     models = {
-        'cron.cronjoblog': {
+        'django_cron.cronjoblog': {
             'Meta': {'object_name': 'CronJobLog'},
             'code': ('django.db.models.fields.CharField', [], {'max_length': '64', 'db_index': 'True'}),
             'end_time': ('django.db.models.fields.DateTimeField', [], {}),
@@ -38,4 +38,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = ['cron']
+    complete_apps = ['django_cron']

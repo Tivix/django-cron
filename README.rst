@@ -24,7 +24,7 @@ directory in your codebase.
 
 - Write a cron class somewhere in your code, that extends the `CronJobBase` class. This class will look something like this::
 
-	from django_cron import CronJobBase
+	from django_cron import CronJobBase, Schedule
 	class MyCronJob(CronJobBase):
 	    RUN_EVERY_MINS = 120 # every 2 hours
 		
