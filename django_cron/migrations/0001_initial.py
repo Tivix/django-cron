@@ -15,7 +15,7 @@ class Migration(SchemaMigration):
             ('start_time', self.gf('django.db.models.fields.DateTimeField')(db_index=True)),
             ('end_time', self.gf('django.db.models.fields.DateTimeField')()),
             ('is_success', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('message', self.gf('django.db.models.fields.TextField')(db_index=True, max_length=1000, blank=True)),
+            ('message', self.gf('django.db.models.fields.TextField')(max_length=1000, blank=True)),
         ))
         db.send_create_signal('django_cron', ['CronJobLog'])
 
@@ -33,7 +33,7 @@ class Migration(SchemaMigration):
             'end_time': ('django.db.models.fields.DateTimeField', [], {}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'is_success': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'message': ('django.db.models.fields.TextField', [], {'db_index': 'True', 'max_length': '1000', 'blank': 'True'}),
+            'message': ('django.db.models.fields.TextField', [], {'max_length': '1000', 'blank': 'True'}),
             'start_time': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True'})
         }
     }
