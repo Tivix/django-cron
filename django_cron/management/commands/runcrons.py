@@ -14,7 +14,7 @@ def get_class( kls ):
         m = getattr(m, comp)            
     return m
 
-CRONS_TO_RUN = map(lambda x: get_class(x), settings.CRONS_CLASSES)
+CRONS_TO_RUN = map(lambda x: get_class(x), settings.CRON_CLASSES)
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
