@@ -21,7 +21,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'Django>=1.2.3',
-        'South==0.7.2'
+        'South>=0.7.2'
     ],
     # test_suite = 'django_cron.tests',
     include_package_data=True,
