@@ -26,10 +26,13 @@ class CronJobManager(object):
     """
     
     @classmethod
-    def __should_run_now(self, cron_job):
+    def __should_run_now(self, cron_job, force=False):
         """
         Returns a boolean determining whether this cron should run now or not!
         """
+        # If we pass --force options, we force cron run
+        if force:
+            return True
         qset = CronJobLog.objects.filter(code=cron_job.code, is_success=True).order_by('-start_time')
         if qset:
             previously_ran_successful_cron = qset[0]
@@ -39,14 +42,14 @@ class CronJobManager(object):
         return True
     
     @classmethod
-    def run(self, cron_job):
+    def run(self, cron_job, force=False):
         """
         apply the logic of the schedule and call do() on the CronJobBase class
         """
         if not isinstance(cron_job, CronJobBase):
             raise Exception, 'The cron_job to be run should be a subclass of %s' % CronJobBase.__class__
         
-        if CronJobManager.__should_run_now(cron_job):
+        if CronJobManager.__should_run_now(cron_job, force):
             logging.info("Running cron: %s" % cron_job)
             cron_log = CronJobLog(code=cron_job.code, start_time=datetime.now())
             
