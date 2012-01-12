@@ -10,8 +10,7 @@ This app solves both issues to a reasonable extent. This is by no means a replac
 Installation
 ------------
 
-- Install django_cron (ideally in your virtualenv!) using pip or simply getting a copy of the code and putting it in a
-directory in your codebase.
+- Install django_cron (ideally in your virtualenv!) using pip or simply getting a copy of the code and putting it in a directory in your codebase.
 
 - Add ``django_cron`` to your Django settings ``INSTALLED_APPS``::
 	

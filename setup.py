@@ -10,6 +10,14 @@ except ImportError:
     from setuptools.command.test import test
 
 
+import os
+
+here = os.path.dirname(os.path.abspath(__file__))
+f = open(os.path.join(here,  'README.rst'))
+long_description = f.read().strip()
+f.close()
+
+
 setup(
     name='django-cron',
     version='0.1',
@@ -18,6 +26,8 @@ setup(
     url='http://github.com/tivix/django-cron',
     description = 'Running python crons in a Django project',
     packages=find_packages(),
+    long_description=long_description,
+    keywords = 'django cron',
     zip_safe=False,
     install_requires=[
         'Django>=1.2.3',
