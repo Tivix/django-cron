@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.core.cache import cache
-
+from django.utils import timezone
 from django_cron import CronJobManager
 
 from datetime import datetime
@@ -34,7 +34,7 @@ class Command(BaseCommand):
                     timeout = settings.DJANGO_CRON_LOCK_TIME
                 except:
                     pass
-                cache.set(cron_class.__name__, datetime.now(), timeout)
+                cache.set(cron_class.__name__, timezone.now(), timeout)
                 CronJobManager.run(instance, options['force'])
                 cache.delete(cron_class.__name__)
             else:
