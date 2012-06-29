@@ -20,7 +20,7 @@ f.close()
 
 setup(
     name='django-cron',
-    version='0.1',
+    version='0.11',
     author='Sumit Chachra',
     author_email='chachra@tivix.com',
     url='http://github.com/tivix/django-cron',
@@ -31,7 +31,8 @@ setup(
     zip_safe=False,
     install_requires=[
         'Django>=1.2.3',
-        'South>=0.7.2'
+        'South>=0.7.2',
+        'django-common>=0.1'
     ],
     # test_suite = 'django_cron.tests',
     include_package_data=True,
