@@ -42,4 +42,35 @@ Installation
 
 - Now everytime you run the management command ``python manage.py runcrons`` all the crons will run if required. Depending on the application the management command can be called from the Unix crontab as often as required. Every 5 minutes usually works for most of my applications.
 
+Sample cronjob: FailedRunsNotificationCronJob
+---------------------------------------------
+
+This example cron job check last jobs results. If they were unsuccessfull 10 times in row, it sends email to user.
+
+- Installation
+    
+    Install required dependencies: 'Django>=1.2.3', 'South>=0.7.2', 'django-common>=0.1'.
+    Add 'django_cron.cron.FailedRunsNotificationCronJob' to your CRON_CLASSES in settings file.
+    
+- To set up minimal number of failed runs set up MIN_NUM_FAILURES in your cron class (default = 10). For example:
+    
+    class MyCronJob(CronJobBase):
+        RUN_EVERY_MINS = 10
+        MIN_NUM_FAILURES = 3
+    
+        schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
+        code = 'app.MyCronJob'
+    
+        def do(self):
+            .. some action here ...
+            
+- Emails are imported from ADMINS in settings file
+- To set up email prefix, you must add FAILED_RUNS_CRONJOB_EMAIL_PREFIX in your settings file (default is empty). For example:
+
+    FAILED_RUNS_CRONJOB_EMAIL_PREFIX = "[Server check]: "
+            
+    
+            
+    
+
 This opensource app is brought to you by Tivix, Inc. ( http://tivix.com/ )
