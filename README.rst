@@ -42,8 +42,8 @@ Installation
 
 - Now everytime you run the management command ``python manage.py runcrons`` all the crons will run if required. Depending on the application the management command can be called from the Unix crontab as often as required. Every 5 minutes usually works for most of my applications.
 
-SSample cronjob: FailedRunsNotificationCronJob
----------------------------------------------
+FailedRunsNotificationCronJob
+-----------------------------
 
 This example cron job check last jobs results. If they were unsuccessfull 10 times in row, it sends email to user.
     
