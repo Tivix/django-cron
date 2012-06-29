@@ -10,5 +10,6 @@ class CronJobLogAdmin(admin.ModelAdmin):
     search_fields = ('code', 'message')
     ordering = ('-start_time',)
     list_display = ('code', 'start_time', 'is_success')
+    list_filter = ('code', 'start_time', 'is_success')
 
 admin.site.register(CronJobLog, CronJobLogAdmin)
