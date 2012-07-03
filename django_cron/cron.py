@@ -43,7 +43,7 @@ class FailedRunsNotificationCronJob(CronJobBase):
             if failures == min_failures:
 
                 send_mail(
-                    '%s%s failed %s times in a row' % (FAILED_RUNS_CRONJOB_EMAIL_PREFIX, self.code, min_failures),
+                    '%s%s failed %s times in a row' % (FAILED_RUNS_CRONJOB_EMAIL_PREFIX, cron.code, min_failures),
                     'Latest cron job was ran %s \n\n Error reason: \n\n %s' % (job.end_time, job.message),
                     settings.DEFAULT_FROM_EMAIL, EMAILS
                 )
