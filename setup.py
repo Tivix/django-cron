@@ -34,7 +34,7 @@ setup(
         'South>=0.7.2',
         'django-common>=0.1'
     ],
-    # test_suite = 'django_cron.tests',
+    test_suite = 'django_cron.tests',
     include_package_data=True,
     # cmdclass={},
     classifiers=[
