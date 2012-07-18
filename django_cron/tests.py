@@ -5,6 +5,6 @@ class SimpleTestCase(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_animals_can_speak(self):
+    def test_example(self):
         """Some test example"""
         pass
