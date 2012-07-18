@@ -54,8 +54,9 @@ class CronJobManager(object):
             cron_log = CronJobLog(code=cron_job.code, start_time=datetime.now())
             
             try:
-                cron_job.do()
+                msg = cron_job.do()
                 cron_log.is_success = True
+                cron_log.message = msg or ''
             except Exception, e:
                 cron_log.is_success = False
                 cron_log.message = traceback.format_exc()[-1000:]
