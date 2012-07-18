@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timedelta
+from django.utils import timezone
 import traceback
 
 from django_cron.models import CronJobLog
@@ -36,7 +37,7 @@ class CronJobManager(object):
         qset = CronJobLog.objects.filter(code=cron_job.code, is_success=True).order_by('-start_time')
         if qset:
             previously_ran_successful_cron = qset[0]
-            if datetime.now() < previously_ran_successful_cron.start_time + timedelta(minutes=cron_job.schedule.run_every_mins):
+            if timezone.now() < previously_ran_successful_cron.start_time + timedelta(minutes=cron_job.schedule.run_every_mins):
                 return False
     
         return True
@@ -51,7 +52,7 @@ class CronJobManager(object):
         
         if CronJobManager.__should_run_now(cron_job, force):
             logging.info("Running cron: %s" % cron_job)
-            cron_log = CronJobLog(code=cron_job.code, start_time=datetime.now())
+            cron_log = CronJobLog(code=cron_job.code, start_time=timezone.now())
             
             try:
                 msg = cron_job.do()
@@ -61,5 +62,5 @@ class CronJobManager(object):
                 cron_log.is_success = False
                 cron_log.message = traceback.format_exc()[-1000:]
             
-            cron_log.end_time = datetime.now()
+            cron_log.end_time = timezone.now()
             cron_log.save()
