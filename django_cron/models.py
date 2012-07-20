@@ -12,6 +12,7 @@ class CronJobLog(models.Model):
     end_time = models.DateTimeField()
     is_success = models.BooleanField(default=False)
     message = models.TextField(max_length=1000, blank=True)  # TODO: db_index=True, 
+    ran_at_time = models.TimeField(null=True, blank=True, db_index=True, editable=False)
 
     def __unicode__(self):
         return '%s (%s)' % (self.code, 'Success' if self.is_success else 'Fail')
