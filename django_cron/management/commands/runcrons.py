@@ -11,7 +11,7 @@ except ImportError:
 from datetime import datetime
 from optparse import make_option
 
-DEFAULT_LOCK_TIME = 15*60
+DEFAULT_LOCK_TIME = 24*60*60  # 24 hours
 
 def get_class( kls ):
     """TODO: move to django-common app.
