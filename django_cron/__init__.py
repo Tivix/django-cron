@@ -41,6 +41,7 @@ class CronJobManager(object):
         Returns a boolean determining whether this cron should run now or not!
         """
         # If we pass --force options, we force cron run
+        self.user_time = None
         if force:
             return True
         if cron_job.schedule.run_every_mins != None:
@@ -83,7 +84,6 @@ class CronJobManager(object):
             except Exception:
                 cron_log.is_success = False
                 cron_log.message = traceback.format_exc()[-1000:]
-            if self.user_time:
-                cron_log.ran_at_time = self.user_time
+            cron_log.ran_at_time = self.user_time if self.user_time else None
             cron_log.end_time = timezone.now()
             cron_log.save()
