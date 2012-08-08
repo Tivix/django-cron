@@ -6,6 +6,37 @@ Django-cron lets you run Django/Python code on a recurring basis proving basic p
 
 This app solves both issues to a reasonable extent. This is by no means a replacement for queues like Celery ( http://celeryproject.org/ ) etc.
 
+New feature
+-----------
+
+You can run cron by passing RUN_EVERY_MINS or RUN_AT_TIMES params.
+
+This will run job every hour::
+    
+    class MyCronJob(CronJobBase):
+        RUN_EVERY_MINS = 60 # every hours
+        
+        schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
+
+This will run job at given hours::
+
+    class MyCronJob(CronJobBase):
+        RUN_AT_TIMES = ['11:30', '14:00', '23:15']
+
+        schedule = Schedule(run_at_times=RUN_AT_TIMES)
+
+Hour format is HH:MM (24h clock)
+
+You can also mix up both of these methods::
+    
+    class MyCronJob(CronJobBase):
+        RUN_EVERY_MINS = 120 # every 2 hours
+        RUN_AT_TIMES = ['6:30']
+        
+        schedule = Schedule(run_every_mins=RUN_EVERY_MINS, run_at_times=RUN_AT_TIMES)
+
+This will run job every 2h plus one run at 6:30.
+
 
 Installation
 ------------
@@ -13,8 +44,8 @@ Installation
 - Install django_cron (ideally in your virtualenv!) using pip or simply getting a copy of the code and putting it in a directory in your codebase.
 
 - Add ``django_cron`` to your Django settings ``INSTALLED_APPS``::
-	
-	INSTALLED_APPS = [
+    
+    INSTALLED_APPS = [
         # ...
         "django_cron",
     ]
@@ -23,21 +54,21 @@ Installation
 
 - Write a cron class somewhere in your code, that extends the `CronJobBase` class. This class will look something like this::
 
-	from django_cron import CronJobBase, Schedule
-	class MyCronJob(CronJobBase):
-	    RUN_EVERY_MINS = 120 # every 2 hours
-		
-	    schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
-	    code = 'my_app.my_cron_job'	# a unique code
-		
-	    def do(self):
-			pass	# do your thing here
+    from django_cron import CronJobBase, Schedule
+    class MyCronJob(CronJobBase):
+        RUN_EVERY_MINS = 120 # every 2 hours
+        
+        schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
+        code = 'my_app.my_cron_job'    # a unique code
+        
+        def do(self):
+            pass    # do your thing here
 
 - Add a variable called ``CRON_CLASSES`` (similar to ``MIDDLEWARE_CLASSES`` etc.) thats a list of strings, each being a cron class. Eg.::
 
-	CRON_CLASSES = [
+    CRON_CLASSES = [
         "my_app.cron.MyCronJob",
-		# ...
+        # ...
     ]
 
 - Now everytime you run the management command ``python manage.py runcrons`` all the crons will run if required. Depending on the application the management command can be called from the Unix crontab as often as required. Every 5 minutes usually works for most of my applications.
