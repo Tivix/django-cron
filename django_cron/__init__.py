@@ -50,6 +50,8 @@ class CronJobManager(object):
                 previously_ran_successful_cron = qset[0]
                 if timezone.now() > previously_ran_successful_cron.start_time + timedelta(minutes=cron_job.schedule.run_every_mins):
                     return True
+            else:
+                return True
         if cron_job.schedule.run_at_times:
             for time_data in cron_job.schedule.run_at_times:
                 user_time = time.strptime(time_data, "%H:%M")
