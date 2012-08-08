@@ -36,14 +36,17 @@ class FailedRunsNotificationCronJob(CronJobBase):
 
             jobs = CronJobLog.objects.filter(code=cron.code).order_by('-end_time')[:min_failures]
 
+            message = ''
+
             for job in jobs:
                 if not job.is_success:
                     failures += 1
+                    message += 'Job ran at %s : \n\n %s \n\n' % (job.start_time, job.message)
 
             if failures == min_failures:
 
                 send_mail(
-                    '%s%s failed %s times in a row' % (FAILED_RUNS_CRONJOB_EMAIL_PREFIX, cron.code, min_failures),
-                    'Latest cron job was ran %s \n\n Error reason: \n\n %s' % (job.end_time, job.message),
+                    '%s%s failed %s times in a row!' % (FAILED_RUNS_CRONJOB_EMAIL_PREFIX, cron.code, \
+                        min_failures), message,
                     settings.DEFAULT_FROM_EMAIL, EMAILS
                 )
