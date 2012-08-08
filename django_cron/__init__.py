@@ -45,26 +45,20 @@ class CronJobManager(object):
         if force:
             return True
         if cron_job.schedule.run_every_mins != None:
-            qset = CronJobLog.objects.filter(code=cron_job.code, is_success=True).order_by('-start_time')
+            qset = CronJobLog.objects.filter(code=cron_job.code, is_success=True, ran_at_time__isnull=True).order_by('-start_time')
             if qset:
                 previously_ran_successful_cron = qset[0]
-                if timezone.now() < previously_ran_successful_cron.start_time + timedelta(minutes=cron_job.schedule.run_every_mins):
-                    return False
-            return True
-        elif cron_job.schedule.run_at_times:
+                if timezone.now() > previously_ran_successful_cron.start_time + timedelta(minutes=cron_job.schedule.run_every_mins):
+                    return True
+        if cron_job.schedule.run_at_times:
             for time_data in cron_job.schedule.run_at_times:
-                #try:
                 user_time = time.strptime(time_data, "%H:%M")
-                actuall_time = time.strptime("%s:%s" % (datetime.now().hour, datetime.now().minute), "%H:%M")
-                if actuall_time > user_time:
+                actual_time = time.strptime("%s:%s" % (datetime.now().hour, datetime.now().minute), "%H:%M")
+                if actual_time >= user_time:
                     qset = CronJobLog.objects.filter(code=cron_job.code, start_time__gt=datetime.today().date(), ran_at_time=time_data)
                     if not qset:
                         self.user_time = time_data
                         return True
-                    else:
-                        return False
-                #except:
-                #    return False
         return False
 
     @classmethod
