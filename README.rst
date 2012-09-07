@@ -6,8 +6,22 @@ Django-cron lets you run Django/Python code on a recurring basis proving basic p
 
 This app solves both issues to a reasonable extent. This is by no means a replacement for queues like Celery ( http://celeryproject.org/ ) etc.
 
-New feature
------------
+Retry after failure feature
+---------------------------
+
+You can run cron by passing RETRY_AFTER_FAILURE_MINS param.
+
+This will re-runs not next time runcrons is run, but at least RETRY_AFTER_FAILURE_MINS after last failure::
+
+    class MyCronJob(CronJobBase):
+        RUN_EVERY_MINS = 60 # every hours
+        RETRY_AFTER_FAILURE_MINS = 5
+        
+        schedule = Schedule(run_every_mins=RUN_EVERY_MINS, retry_after_failure_mins=RETRY_AFTER_FAILURE_MINS)
+    
+
+Run at times feature
+--------------------
 
 You can run cron by passing RUN_EVERY_MINS or RUN_AT_TIMES params.
 
