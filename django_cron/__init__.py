@@ -13,9 +13,10 @@ except ImportError:
 
 
 class Schedule(object):
-    def __init__(self, run_every_mins=None, run_at_times=[]):
+    def __init__(self, run_every_mins=None, run_at_times=[], retry_after_failure_mins=None):
         self.run_every_mins = run_every_mins
         self.run_at_times = run_at_times
+        self.retry_after_failure_mins = retry_after_failure_mins
 
 
 class CronJobBase(object):
@@ -45,6 +46,17 @@ class CronJobManager(object):
         if force:
             return True
         if cron_job.schedule.run_every_mins != None:
+
+            # We check last job - success or not
+            qset = CronJobLog.objects.filter(code=cron_job.code).order_by('-start_time')
+            if qset:
+                last_job = qset[0]
+                if not last_job.is_success and cron_job.schedule.retry_after_failure_mins:
+                    if timezone.now() > last_job.start_time + timedelta(minutes=cron_job.schedule.retry_after_failure_mins):
+                        return True
+                    else:
+                        return False
+
             qset = CronJobLog.objects.filter(code=cron_job.code, is_success=True, ran_at_time__isnull=True).order_by('-start_time')
             if qset:
                 previously_ran_successful_cron = qset[0]
