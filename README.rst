@@ -51,6 +51,16 @@ You can also mix up both of these methods::
 
 This will run job every 2h plus one run at 6:30.
 
+Allowing parallels runs
+-----------------------
+
+By deafult parallels runs are not allowed (for security reasons). However if you
+want enable them just add:
+
+    ALLOW_PARALLEL_RUNS = True
+
+in your CronJob class.
+
 
 Installation
 ------------
