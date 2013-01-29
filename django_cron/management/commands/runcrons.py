@@ -31,7 +31,7 @@ class Command(BaseCommand):
     )
     def handle(self, *args, **options):
         for cron_class in CRONS_TO_RUN:
-            if not cache.get(cron_class.__name__):
+            if not cache.get(cron_class.__name__) or getattr(cron_class, 'ALLOW_PARALLEL_RUNS', False):
                 instance = cron_class()
                 timeout = DEFAULT_LOCK_TIME
                 try:
