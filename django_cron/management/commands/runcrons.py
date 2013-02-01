@@ -28,6 +28,7 @@ CRONS_TO_RUN = map(lambda x: get_class(x), settings.CRON_CLASSES)
 class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
         make_option('--force', action='store_true', help='Force cron runs'),
+        make_option('--silent', action='store_true', help='Do not push any message on console'),
     )
     def handle(self, *args, **options):
         for cron_class in CRONS_TO_RUN:
@@ -42,4 +43,5 @@ class Command(BaseCommand):
                 CronJobManager.run(instance, options['force'])
                 cache.delete(cron_class.__name__)
             else:
-                print "%s failed: lock has been found. Other cron started at %s" % (cron_class.__name__, cache.get(cron_class.__name__)) 
+                if not options['silent']:
+                    print "%s failed: lock has been found. Other cron started at %s" % (cron_class.__name__, cache.get(cron_class.__name__)) 
