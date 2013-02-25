@@ -131,6 +131,12 @@ This opensource app is brought to you by Tivix, Inc. ( http://tivix.com/ )
 Changelog
 =========
 
+0.2.5
+-----
+
+    - Added a helper function ( run_cron_with_cache_check ) in runcrons.py
+
+
 0.2.4
 -----
 

@@ -53,16 +53,26 @@ class Command(BaseCommand):
             sys.exit()
 
         for cron_class in crons_to_run:
-            if not cache.get(cron_class.__name__) or getattr(cron_class, 'ALLOW_PARALLEL_RUNS', False):
-                instance = cron_class()
-                timeout = DEFAULT_LOCK_TIME
-                try:
-                    timeout = settings.DJANGO_CRON_LOCK_TIME
-                except:
-                    pass
-                cache.set(cron_class.__name__, timezone.now(), timeout)
-                CronJobManager.run(instance, options['force'])
-                cache.delete(cron_class.__name__)
-            else:
-                if not options['silent']:
-                    print "%s failed: lock has been found. Other cron started at %s" % (cron_class.__name__, cache.get(cron_class.__name__))
+            run_cron_with_cache_check(cron_class, force=options, silent=options['silent'])
+
+
+def run_cron_with_cache_check(cron_class, force=False, silent=False):
+    """
+    Checks the cache and runs the cron or not.
+
+    @cron_class - cron class to run.
+    """
+    if not cache.get(cron_class.__name__) or getattr(cron_class, 'ALLOW_PARALLEL_RUNS', False):
+        instance = cron_class()
+        timeout = DEFAULT_LOCK_TIME
+        try:
+            timeout = settings.DJANGO_CRON_LOCK_TIME
+        except:
+            pass
+        cache.set(cron_class.__name__, timezone.now(), timeout)
+        CronJobManager.run(instance, force)
+        cache.delete(cron_class.__name__)
+    else:
+        if not silent:
+            print "%s failed: lock has been found. Other cron started at %s" % \
+                (cron_class.__name__, cache.get(cron_class.__name__))
