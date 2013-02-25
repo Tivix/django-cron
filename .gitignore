@@ -1,2 +1,4 @@
 *.pyc
 *.DS_Store
+dist/
+django_cron.egg-info/
