@@ -131,6 +131,12 @@ This opensource app is brought to you by Tivix, Inc. ( http://tivix.com/ )
 Changelog
 =========
 
+0.2.7
+-----
+
+    - Bug fix.
+
+
 0.2.6
 -----
 

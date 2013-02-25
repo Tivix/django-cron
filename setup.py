@@ -20,7 +20,7 @@ f.close()
 
 setup(
     name='django-cron',
-    version='0.2.6',
+    version='0.2.7',
     author='Sumit Chachra',
     author_email='chachra@tivix.com',
     url='http://github.com/tivix/django-cron',

@@ -53,7 +53,8 @@ class Command(BaseCommand):
             sys.exit()
 
         for cron_class in crons_to_run:
-            run_cron_with_cache_check(cron_class, force=options, silent=options['silent'])
+            run_cron_with_cache_check(cron_class, force=options['force'],
+                silent=options['silent'])
 
 
 def run_cron_with_cache_check(cron_class, force=False, silent=False):
