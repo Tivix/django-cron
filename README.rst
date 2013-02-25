@@ -131,6 +131,12 @@ This opensource app is brought to you by Tivix, Inc. ( http://tivix.com/ )
 Changelog
 =========
 
+0.2.6
+-----
+
+    - Added `end_time` to list_display in CronJobLog admin
+
+
 0.2.5
 -----
 
