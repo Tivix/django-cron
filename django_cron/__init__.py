@@ -66,7 +66,6 @@ class CronJobManager(object):
             except CronJobLog.DoesNotExist:
                 pass
             if previously_ran_successful_cron:
-                print 'Finish query 2: %s' % datetime.now()
                 if timezone.now() > previously_ran_successful_cron.start_time + timedelta(minutes=cron_job.schedule.run_every_mins):
                     return True
             else:
