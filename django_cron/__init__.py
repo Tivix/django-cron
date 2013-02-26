@@ -48,18 +48,25 @@ class CronJobManager(object):
         if cron_job.schedule.run_every_mins != None:
 
             # We check last job - success or not
-            qset = CronJobLog.objects.filter(code=cron_job.code).order_by('-start_time')
-            if qset:
-                last_job = qset[0]
+            last_job = None
+            try:
+                last_job = CronJobLog.objects.filter(code=cron_job.code).latest('start_time')
+            except CronJobLog.DoesNotExist:
+                pass
+            if last_job:
                 if not last_job.is_success and cron_job.schedule.retry_after_failure_mins:
                     if timezone.now() > last_job.start_time + timedelta(minutes=cron_job.schedule.retry_after_failure_mins):
                         return True
                     else:
                         return False
 
-            qset = CronJobLog.objects.filter(code=cron_job.code, is_success=True, ran_at_time__isnull=True).order_by('-start_time')
-            if qset:
-                previously_ran_successful_cron = qset[0]
+            previously_ran_successful_cron = None
+            try:            
+                previously_ran_successful_cron = CronJobLog.objects.filter(code=cron_job.code, is_success=True, ran_at_time__isnull=True).latest('start_time')
+            except CronJobLog.DoesNotExist:
+                pass
+            if previously_ran_successful_cron:
+                print 'Finish query 2: %s' % datetime.now()
                 if timezone.now() > previously_ran_successful_cron.start_time + timedelta(minutes=cron_job.schedule.run_every_mins):
                     return True
             else:
