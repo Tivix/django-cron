@@ -64,13 +64,13 @@ def run_cron_with_cache_check(cron_class, force=False, silent=False):
     @cron_class - cron class to run.
     """
     if not cache.get(cron_class.__name__) or getattr(cron_class, 'ALLOW_PARALLEL_RUNS', False):
+        cache.set(cron_class.__name__, timezone.now(), timeout)
         instance = cron_class()
         timeout = DEFAULT_LOCK_TIME
         try:
             timeout = settings.DJANGO_CRON_LOCK_TIME
         except:
             pass
-        cache.set(cron_class.__name__, timezone.now(), timeout)
         CronJobManager.run(instance, force)
         cache.delete(cron_class.__name__)
     else:
