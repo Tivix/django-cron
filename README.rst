@@ -131,6 +131,14 @@ This opensource app is brought to you by Tivix, Inc. ( http://tivix.com/ )
 Changelog
 =========
 
+0.2.8
+-----
+
+    - Bug fix
+
+    - Optimized queries. Used latest() instead of order_by()
+
+
 0.2.7
 -----
 
