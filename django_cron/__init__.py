@@ -61,7 +61,7 @@ class CronJobManager(object):
                         return False
 
             previously_ran_successful_cron = None
-            try:            
+            try:
                 previously_ran_successful_cron = CronJobLog.objects.filter(code=cron_job.code, is_success=True, ran_at_time__isnull=True).latest('start_time')
             except CronJobLog.DoesNotExist:
                 pass
@@ -89,7 +89,7 @@ class CronJobManager(object):
         if not isinstance(cron_job, CronJobBase):
             raise Exception, 'The cron_job to be run should be a subclass of %s' % CronJobBase.__class__
         if CronJobManager.__should_run_now(cron_job, force):
-            logging.info("Running cron: %s" % cron_job)
+            logging.debug("Running cron: %s" % cron_job)
             cron_log = CronJobLog(code=cron_job.code, start_time=timezone.now())
             try:
                 msg = cron_job.do()

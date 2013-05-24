@@ -131,6 +131,12 @@ This opensource app is brought to you by Tivix, Inc. ( http://tivix.com/ )
 Changelog
 =========
 
+0.2.9
+-----
+
+    - Changed log level to debug() in CronJobManager.run() function.
+
+
 0.2.8
 -----
 
