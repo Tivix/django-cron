@@ -131,6 +131,12 @@ This opensource app is brought to you by Tivix, Inc. ( http://tivix.com/ )
 Changelog
 =========
 
+0.3.0
+-----
+
+    - Added Django 1.4+ support. Updated requirements.
+
+
 0.2.9
 -----
 
