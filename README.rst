@@ -131,6 +131,14 @@ This opensource app is brought to you by Tivix, Inc. ( http://tivix.com/ )
 Changelog
 =========
 
+0.3.1
+------
+
+    - Added index_together entries for faster queries on large cron log db tables.
+
+    - Upgraded requirement hence to Django 1.5 and South 0.8.1 since ``index_together`` is new to Django 1.5
+
+
 0.3.0
 -----
 

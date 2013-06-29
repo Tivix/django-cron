@@ -9,7 +9,7 @@ class CronJobLog(models.Model):
     """
     code = models.CharField(max_length=64, db_index=True)
     start_time = models.DateTimeField(db_index=True)
-    end_time = models.DateTimeField()
+    end_time = models.DateTimeField(db_index=True)
     is_success = models.BooleanField(default=False)
     message = models.TextField(max_length=1000, blank=True)  # TODO: db_index=True
 
@@ -21,3 +21,10 @@ class CronJobLog(models.Model):
 
     def __unicode__(self):
         return '%s (%s)' % (self.code, 'Success' if self.is_success else 'Fail')
+
+    class Meta:
+        index_together = [
+            ('code', 'is_success', 'ran_at_time'),
+            ('code', 'start_time', 'ran_at_time'),
+            ('code', 'start_time')  # useful when finding latest run (order by start_time) of cron
+        ]
