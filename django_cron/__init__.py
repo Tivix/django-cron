@@ -82,7 +82,7 @@ class CronJobManager(object):
         return False
 
     @classmethod
-    def run(self, cron_job, force=False):
+    def run(self, cron_job, force=False, silent=False):
         """
         apply the logic of the schedule and call do() on the CronJobBase class
         """
@@ -96,8 +96,11 @@ class CronJobManager(object):
                 cron_log.is_success = True
                 cron_log.message = msg or ''
             except Exception:
+                error = traceback.format_exc()
+                if not silent:
+                    print error
                 cron_log.is_success = False
-                cron_log.message = traceback.format_exc()[-1000:]
+                cron_log.message = error[-1000:]
             cron_log.ran_at_time = self.user_time if self.user_time else None
             cron_log.end_time = timezone.now()
             cron_log.save()
