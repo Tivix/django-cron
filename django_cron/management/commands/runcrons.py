@@ -12,6 +12,7 @@ try:
 except ImportError:
     # timezone added in Django 1.4
     from django_cron import timezone
+from django.db import close_connection
 
 
 DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
@@ -57,6 +58,7 @@ class Command(BaseCommand):
         for cron_class in crons_to_run:
             run_cron_with_cache_check(cron_class, force=options['force'],
                 silent=options['silent'])
+        close_connection()
 
 
 def run_cron_with_cache_check(cron_class, force=False, silent=False):
