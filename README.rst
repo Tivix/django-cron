@@ -131,6 +131,13 @@ This opensource app is brought to you by Tivix, Inc. ( http://tivix.com/ )
 Changelog
 =========
 
+0.3.2
+------
+
+    - Added database connection close.
+
+    - Added better exceptions handler.
+
 0.3.1
 ------
 
