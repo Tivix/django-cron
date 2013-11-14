@@ -28,7 +28,15 @@ class CronJobBase(object):
     Following functions:
     + do - This is the actual business logic to be run at the given schedule
     """
-    pass
+
+    def __init__(self):
+        self.prev_success_cron = None
+
+    def set_prev_success_cron(self, prev_success_cron):
+        self.prev_success_cron = prev_success_cron
+
+    def get_prev_success_cron(self):
+        return self.prev_success_cron
 
 
 class CronJobManager(object):
@@ -43,6 +51,7 @@ class CronJobManager(object):
         """
         # If we pass --force options, we force cron run
         self.user_time = None
+        self.previously_ran_successful_cron = None
         if force:
             return True
         if cron_job.schedule.run_every_mins != None:
@@ -59,14 +68,12 @@ class CronJobManager(object):
                         return True
                     else:
                         return False
-
-            previously_ran_successful_cron = None
             try:
-                previously_ran_successful_cron = CronJobLog.objects.filter(code=cron_job.code, is_success=True, ran_at_time__isnull=True).latest('start_time')
+                self.previously_ran_successful_cron = CronJobLog.objects.filter(code=cron_job.code, is_success=True, ran_at_time__isnull=True).latest('start_time')
             except CronJobLog.DoesNotExist:
                 pass
-            if previously_ran_successful_cron:
-                if timezone.now() > previously_ran_successful_cron.start_time + timedelta(minutes=cron_job.schedule.run_every_mins):
+            if self.previously_ran_successful_cron:
+                if timezone.now() > self.previously_ran_successful_cron.start_time + timedelta(minutes=cron_job.schedule.run_every_mins):
                     return True
             else:
                 return True
@@ -92,6 +99,7 @@ class CronJobManager(object):
             logging.debug("Running cron: %s" % cron_job)
             cron_log = CronJobLog(code=cron_job.code, start_time=timezone.now())
             try:
+                cron_job.set_prev_success_cron(self.previously_ran_successful_cron)
                 msg = cron_job.do()
                 cron_log.is_success = True
                 cron_log.message = msg or ''
