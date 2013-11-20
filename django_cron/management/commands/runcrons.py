@@ -5,7 +5,7 @@ import traceback
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from django.core.cache import cache
+from django.core.cache import get_cache
 from django_cron import CronJobManager
 try:
     from django.utils import timezone
@@ -67,6 +67,7 @@ def run_cron_with_cache_check(cron_class, force=False, silent=False):
 
     @cron_class - cron class to run.
     """
+    cache = get_cache(getattr(settings, 'CRON_CACHE', 'default'))
     if not cache.get(cron_class.__name__) or getattr(cron_class, 'ALLOW_PARALLEL_RUNS', False):
         timeout = DEFAULT_LOCK_TIME
         try:
