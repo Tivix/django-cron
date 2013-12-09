@@ -87,7 +87,7 @@ class CronJobManager(object):
         apply the logic of the schedule and call do() on the CronJobBase class
         """
         if not isinstance(cron_job, CronJobBase):
-            raise Exception, 'The cron_job to be run should be a subclass of %s' % CronJobBase.__class__
+            raise Exception('The cron_job to be run should be a subclass of %s' % CronJobBase.__class__)
         if CronJobManager.__should_run_now(cron_job, force):
             logging.debug("Running cron: %s" % cron_job)
             cron_log = CronJobLog(code=cron_job.code, start_time=timezone.now())
