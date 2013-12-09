@@ -98,7 +98,7 @@ class CronJobManager(object):
             except Exception:
                 error = traceback.format_exc()
                 if not silent:
-                    print error
+                    print(error)
                 cron_log.is_success = False
                 cron_log.message = error[-1000:]
             cron_log.ran_at_time = self.user_time if self.user_time else None
