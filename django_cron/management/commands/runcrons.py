@@ -52,7 +52,7 @@ class Command(BaseCommand):
             crons_to_run = map(lambda x: get_class(x), cron_class_names)
         except:
             error = traceback.format_exc()
-            print 'Make sure these are valid cron class names: %s\n%s' % (cron_class_names, error)
+            print('Make sure these are valid cron class names: %s\n%s' % (cron_class_names, error))
             sys.exit()
 
         for cron_class in crons_to_run:
@@ -79,5 +79,5 @@ def run_cron_with_cache_check(cron_class, force=False, silent=False):
         cache.delete(cron_class.__name__)
     else:
         if not silent:
-            print "%s failed: lock has been found. Other cron started at %s" % \
-                (cron_class.__name__, cache.get(cron_class.__name__))
+            print("%s failed: lock has been found. Other cron started at %s" % \
+                  (cron_class.__name__, cache.get(cron_class.__name__)))

@@ -131,6 +131,11 @@ This opensource app is brought to you by Tivix, Inc. ( http://tivix.com/ )
 Changelog
 =========
 
+0.3.3
+------
+
+    - Python 3 compatibility.
+
 0.3.2
 ------
 
