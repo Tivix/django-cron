@@ -5,7 +5,12 @@ import traceback
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from django.core.cache import get_cache
+try:
+    from django.core.cache import caches
+except ImportError:
+    # `caches` added in 1.7
+    from django.core.cache import get_cache
+
 from django_cron import CronJobManager
 try:
     from django.utils import timezone
@@ -67,7 +72,7 @@ def run_cron_with_cache_check(cron_class, force=False, silent=False):
 
     @cron_class - cron class to run.
     """
-    cache = get_cache(getattr(settings, 'CRON_CACHE', 'default'))
+    cache = get_cache_by_name()
     if not cache.get(cron_class.__name__) or getattr(cron_class, 'ALLOW_PARALLEL_RUNS', False):
         timeout = DEFAULT_LOCK_TIME
         try:
@@ -82,3 +87,17 @@ def run_cron_with_cache_check(cron_class, force=False, silent=False):
         if not silent:
             print "%s failed: lock has been found. Other cron started at %s" % \
                 (cron_class.__name__, cache.get(cron_class.__name__))
+
+def get_cache_by_name():
+    '''
+    Gets a specified cache (or the `default` cache if CRON_CACHE is not set)
+    '''
+    cache_name = getattr(settings, 'CRON_CACHE', 'default')
+    # Allow the possible InvalidCacheBackendError to happen here
+    # instead of allowing unexpected parallel runs of cron jobs
+    try:
+        # Django >= 1.7.*
+        return caches[cache_name]
+    except NameError:
+        # Django <= 1.6.*
+        return get_cache(cache_name)
