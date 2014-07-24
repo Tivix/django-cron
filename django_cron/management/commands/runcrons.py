@@ -74,8 +74,12 @@ def run_cron_with_cache_check(cron_class, force=False, silent=False):
         except:
             pass
         cache.set(cron_class.__name__, timezone.now(), timeout)
-        instance = cron_class()
-        CronJobManager.run(instance, force, silent)
+        try:
+            instance = cron_class()
+            CronJobManager.run(instance, force, silent)
+        except:
+            error = traceback.format_exc()
+            print('Error running cron job, got exception:\n%s' % error)
         cache.delete(cron_class.__name__)
     else:
         if not silent:
