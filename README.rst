@@ -138,6 +138,16 @@ This opensource app is brought to you by Tivix, Inc. ( http://tivix.com/ )
 Changelog
 =========
 
+0.3.4
+------
+
+    - Added CRON_CACHE settings parameter for cache select
+    
+    - Handle database connection errors
+
+    - Upping requirement to Django 1.5+
+
+
 0.3.3
 ------
 
