@@ -63,6 +63,13 @@ want enable them just add:
 in your CronJob class.
 
 
+* Note this requires a caching framework to be installed, as per https://docs.djangoproject.com/en/dev/topics/cache/
+
+If you wish to override which cache is used, put this in your settings file:
+
+    CRON_CACHE = 'cron_cache'
+
+
 Installation
 ------------
 
