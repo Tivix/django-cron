@@ -90,7 +90,7 @@ def run_cron_with_cache_check(cron_class, force=False, silent=False):
     else:
         if not silent:
             print "%s failed: lock has been found. Other cron started at %s" % \
-                (cron_class.__name__, cache.get(cron_class.__name__))
+                (cron_class.__name__, timezone.localtime(cache.get(cron_class.__name__)))
 
 def get_cache_by_name():
     '''
