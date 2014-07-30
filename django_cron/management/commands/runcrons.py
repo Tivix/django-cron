@@ -72,25 +72,25 @@ def run_cron_with_cache_check(cron_class, force=False, silent=False):
 
     @cron_class - cron class to run.
     """
-    cache = get_cache_by_name()
-    if not cache.get(cron_class.__name__) or getattr(cron_class, 'ALLOW_PARALLEL_RUNS', False):
-        timeout = DEFAULT_LOCK_TIME
-        try:
-            timeout = cron_class.DJANGO_CRON_LOCK_TIME if getattr(cron_class, 'DJANGO_CRON_LOCK_TIME', False) else settings.DJANGO_CRON_LOCK_TIME
-        except:
-            pass
-        cache.set(cron_class.__name__, timezone.now(), timeout)
+    cache     = get_cache_by_name()
+    cache_key = get_cache_key_name(cron_class)
+    timeout   = get_cache_timeout(cron_class)
+
+    if not cache.get(cache_key) or getattr(cron_class, 'ALLOW_PARALLEL_RUNS', False):
+        cache.set(cache_key, timezone.now(), timeout)
         try:
             instance = cron_class()
             CronJobManager.run(instance, force, silent)
         except:
             error = traceback.format_exc()
             print('Error running cron job, got exception:\n%s' % error)
-        cache.delete(cron_class.__name__)
+        cache.delete(cache_key)
     else:
         if not silent:
             print "%s failed: lock has been found. Other cron started at %s" % \
-                (cron_class.__name__, timezone.localtime(cache.get(cron_class.__name__)))
+                (cron_class.__name__, timezone.localtime(cache.get(cache_key)))
+            print "Current timeout for job %s is %s seconds (cache key name is '%s')" % \
+                (cron_class.__name__, timeout, cache_key)
 
 def get_cache_by_name():
     '''
@@ -105,3 +105,14 @@ def get_cache_by_name():
     except NameError:
         # Django <= 1.6.*
         return get_cache(cache_name)
+
+def get_cache_key_name(cron_class):
+    return cron_class.__name__
+
+def get_cache_timeout(cron_class):
+    timeout = DEFAULT_LOCK_TIME
+    try:
+        timeout = getattr(cron_class, 'DJANGO_CRON_LOCK_TIME', settings.DJANGO_CRON_LOCK_TIME)
+    except:
+        pass
+    return timeout
