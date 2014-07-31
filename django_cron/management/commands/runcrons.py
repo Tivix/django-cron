@@ -88,7 +88,7 @@ def run_cron_with_cache_check(cron_class, force=False, silent=False):
     else:
         if not silent:
             started = timezone.make_aware(cache.get(cache_key), timezone.get_current_timezone())
-            print "%s failed: lock has been found. Other cron started at %s" % \
+            print "%s wasn't run: lock has been found. Other cron started at %s" % \
                 (cron_class.__name__, started)
             print "Current timeout for job %s is %s seconds (cache key name is '%s')" % \
                 (cron_class.__name__, timeout, cache_key)
