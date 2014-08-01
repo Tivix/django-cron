@@ -1,22 +1,10 @@
 import sys
-from datetime import datetime
 from optparse import make_option
 import traceback
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
-try:
-    from django.core.cache import caches
-except ImportError:
-    # `caches` added in 1.7
-    from django.core.cache import get_cache
-
 from django_cron import CronJobManager
-try:
-    from django.utils import timezone
-except ImportError:
-    # timezone added in Django 1.4
-    from django_cron import timezone
 from django.db import close_connection
 
 
@@ -71,6 +59,8 @@ def run_cron_with_cache_check(cron_class, force=False, silent=False):
     Checks the cache and runs the cron or not.
 
     @cron_class - cron class to run.
+    @force      - run job even if not scheduled
+    @silent     - suppress notifications
     """
     lock_class = get_lock_class()
 
