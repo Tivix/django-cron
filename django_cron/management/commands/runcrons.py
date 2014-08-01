@@ -72,48 +72,18 @@ def run_cron_with_cache_check(cron_class, force=False, silent=False):
 
     @cron_class - cron class to run.
     """
-    cache     = get_cache_by_name()
-    cache_key = get_cache_key_name(cron_class)
-    timeout   = get_cache_timeout(cron_class)
+    lock_class = get_lock_class()
 
-    if not cache.get(cache_key) or getattr(cron_class, 'ALLOW_PARALLEL_RUNS', False):
-        cache.set(cache_key, timezone.now(), timeout)
-        try:
-            instance = cron_class()
-            CronJobManager.run(instance, force, silent)
-        except:
-            error = traceback.format_exc()
-            print('Error running cron job, got exception:\n%s' % error)
-        cache.delete(cache_key)
-    else:
-        if not silent:
-            started = timezone.make_aware(cache.get(cache_key), timezone.get_current_timezone())
-            print "%s wasn't run: lock has been found. Other cron started at %s" % \
-                (cron_class.__name__, started)
-            print "Current timeout for job %s is %s seconds (cache key name is '%s')" % \
-                (cron_class.__name__, timeout, cache_key)
+    with lock_class(cron_class, silent) as lock:
+        if lock.success:
+            try:
+                instance = cron_class()
+                CronJobManager.run(instance, force, silent)
+            except:
+                error = traceback.format_exc()
+                print('Error running cron job %s, got exception:\n%s' % (cron_class.__name__, error))
 
-def get_cache_by_name():
-    '''
-    Gets a specified cache (or the `default` cache if CRON_CACHE is not set)
-    '''
-    cache_name = getattr(settings, 'CRON_CACHE', 'default')
-    # Allow the possible InvalidCacheBackendError to happen here
-    # instead of allowing unexpected parallel runs of cron jobs
-    try:
-        # Django >= 1.7.*
-        return caches[cache_name]
-    except NameError:
-        # Django <= 1.6.*
-        return get_cache(cache_name)
-
-def get_cache_key_name(cron_class):
-    return cron_class.__name__
-
-def get_cache_timeout(cron_class):
-    timeout = DEFAULT_LOCK_TIME
-    try:
-        timeout = getattr(cron_class, 'DJANGO_CRON_LOCK_TIME', settings.DJANGO_CRON_LOCK_TIME)
-    except:
-        pass
-    return timeout
+def get_lock_class():
+    dafault_name = 'django_cron.backends.lock.cache.CacheLock'
+    name = getattr(settings, 'DJANGO_CRON_LOCK_BACKEND', dafault_name)
+    return get_class(name)
