@@ -4,25 +4,12 @@ import traceback
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from django_cron import CronJobManager
+from django_cron import CronJobManager, get_class
 from django.db import close_connection
 
 
 DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
 
-
-def get_class(kls):
-    """
-    TODO: move to django-common app.
-    Converts a string to a class.
-    Courtesy: http://stackoverflow.com/questions/452969/does-python-have-an-equivalent-to-java-class-forname/452981#452981
-    """
-    parts = kls.split('.')
-    module = ".".join(parts[:-1])
-    m = __import__(module)
-    for comp in parts[1:]:
-        m = getattr(m, comp)
-    return m
 
 
 class Command(BaseCommand):
@@ -62,18 +49,7 @@ def run_cron_with_cache_check(cron_class, force=False, silent=False):
     @force      - run job even if not scheduled
     @silent     - suppress notifications
     """
-    lock_class = get_lock_class()
 
-    with lock_class(cron_class, silent) as lock:
-        if lock.success:
-            try:
-                instance = cron_class()
-                CronJobManager.run(instance, force, silent)
-            except:
-                error = traceback.format_exc()
-                print('Error running cron job %s, got exception:\n%s' % (cron_class.__name__, error))
+    with CronJobManager(cron_class, silent) as manager:
+        manager.run(force)
 
-def get_lock_class():
-    dafault_name = 'django_cron.backends.lock.cache.CacheLock'
-    name = getattr(settings, 'DJANGO_CRON_LOCK_BACKEND', dafault_name)
-    return get_class(name)
