@@ -12,7 +12,23 @@ except ImportError:
     # timezone added in Django 1.4
     import timezone
 
+DEFAULT_LOCK_BACKEND = 'django_cron.backends.lock.cache.CacheLock'
 logger = logging.getLogger('django_cron')
+
+def get_class(kls):
+    """
+    TODO: move to django-common app.
+    Converts a string to a class.
+    Courtesy: http://stackoverflow.com/questions/452969/does-python-have-an-equivalent-to-java-class-forname/452981#452981
+    """
+    parts = kls.split('.')
+    module = ".".join(parts[:-1])
+    m = __import__(module)
+    for comp in parts[1:]:
+        m = getattr(m, comp)
+    return m
+
+
 
 class Schedule(object):
     def __init__(self, run_every_mins=None, run_at_times=[], retry_after_failure_mins=None):
@@ -46,6 +62,7 @@ class CronJobManager(object):
 
         self.cron_job_class = cron_job_class
         self.silent         = silent
+        self.lock_class     = self.get_lock_class()
 
     def should_run_now(self, force=False):
         cron_job = self.cron_job
@@ -102,7 +119,12 @@ class CronJobManager(object):
         cron_log = self.cron_log
         cron_msg = self.msg
 
-        if ex_type is not None:
+        if ex_type == self.lock_class.LockFailedException:
+            if not self.silent:
+                logger.info(ex_value)
+            return True # prevent exception propagation
+
+        elif ex_type is not None:
             # some exception occured during job execution
             msg = traceback.format_exception(ex_type, ex_value, ex_traceback)
             msg = "".join(msg)
