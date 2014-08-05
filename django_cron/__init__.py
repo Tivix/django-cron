@@ -98,6 +98,7 @@ class CronJobManager(object):
                     return True
             else:
                 return True
+
         if cron_job.schedule.run_at_times:
             for time_data in cron_job.schedule.run_at_times:
                 user_time = time.strptime(time_data, "%H:%M")
@@ -164,8 +165,27 @@ class CronJobManager(object):
         if not issubclass(cron_job_class, CronJobBase):
             raise Exception('The cron_job to be run must be a subclass of %s' % CronJobBase.__name__)
 
-        self.cron_job = cron_job_class()
+        with self.lock_class(cron_job_class, self.silent):
+            self.cron_job = cron_job_class()
 
-        if self.should_run_now(force):
-            logger.debug("Running cron: %s code %s" % (self.cron_job, self.cron_job.code))
-            self.msg = self.cron_job.do()
+            if self.should_run_now(force):
+                logger.debug("Running cron: %s code %s" % (self.cron_job, self.cron_job.code))
+                self.msg = self.cron_job.do()
+
+    def get_lock_class(self):
+        name = getattr(settings, 'DJANGO_CRON_LOCK_BACKEND', DEFAULT_LOCK_BACKEND)
+        try:
+            return get_class(name)
+        except Exception as err:
+            raise Exception("invalid lock module %s. Can't use it: %s." % (name, err))
+
+
+    @property
+    def msg(self):
+        return getattr(self, '_msg', '')
+
+    @msg.setter
+    def msg(self, msg):
+        if msg is None:
+            msg = ''
+        self._msg = msg
