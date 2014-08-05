@@ -1,11 +1,19 @@
-class DjangCronJobLock(object):
+class DjangoCronJobLock(object):
     """
     The lock class to use in runcrons management command.
     Intendent usage is
-    with CacheLock(cron_class, allow_parallel_runs, silent) as lock:
-        if lock.success:
+    with CacheLock(cron_class, silent):
+        do work
+    or inside try - except:
+    try:
+        with CacheLock(cron_class, silent):
             do work
+    except DjangoCronJobLock.LockFailedException:
+        pass
     """
+    class LockFailedException(Exception):
+        pass
+
     def __init__(self, cron_class, silent, *args, **kwargs):
         """
         This method inits the class.
@@ -41,26 +49,16 @@ class DjangCronJobLock(object):
         """
         raise NotImplementedError('You have to implement release(self) method for your class')
 
-    def notice_lock_failed(self):
-        if self.silent:
-            return
-        print "%s: lock found. Will try later." % self.job_name
-
-    """
-    Status of acquiring lock:
-    True  means ok, lock acquired successfully
-    False means lock failed
-    """
-    success   = None
+    def lock_failed_message(self):
+        return "%s: lock found. Will try later." % self.job_name
 
     def __enter__(self):
         if self.parallel:
-            # Skip real lock
-            self.success = True
+            return
         else:
-            self.success = self.lock()
-        return self
+            if not self.lock():
+                raise self.LockFailedException(self.lock_failed_message())
 
     def __exit__(self, type, value, traceback):
-        if self.success and not self.parallel:
+        if not self.parallel:
             self.release()

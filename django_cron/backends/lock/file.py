@@ -1,10 +1,10 @@
-from base import DjangCronJobLock
+from base import DjangoCronJobLock
 
 from django.conf import settings
 from django.core.files import locks
 import os, sys, errno
 
-class FileLock(DjangCronJobLock):
+class FileLock(DjangoCronJobLock):
     """
     Quite a simple lock backend that uses some kind of pid file.
     """
@@ -40,11 +40,11 @@ class FileLock(DjangCronJobLock):
 
         except IOError as e:
             if e.errno in (errno.EACCES, errno.EAGAIN):
-                self.notice_lock_failed()
                 return False
             else:
                 t, v, tb = sys.exc_info()
                 raise t, v, tb
+        # TODO: perhaps on windows I need to catch different exception type
 
     def release(self):
         f = self.lockfile

@@ -1,4 +1,4 @@
-from base import DjangCronJobLock
+from base import DjangoCronJobLock
 from django.conf import settings
 
 import warnings
@@ -16,7 +16,7 @@ except ImportError:
     from django_cron import timezone
 
 
-class CacheLock(DjangCronJobLock):
+class CacheLock(DjangoCronJobLock):
     """
     One of simpliest lock backends, uses django cache to
     prevent parallel runs of commands.
@@ -34,7 +34,6 @@ class CacheLock(DjangCronJobLock):
         This method sets a cache variable to mark current job as "already running".
         """
         if self.cache.get(self.lock_name):
-            self.notice_lock_failed()
             return False
         else:
             self.cache.set(self.lock_name, timezone.now(), self.timeout)
@@ -43,21 +42,25 @@ class CacheLock(DjangCronJobLock):
     def release(self):
         self.cache.delete(self.lock_name)
 
-    def notice_lock_failed(self):
-        if self.silent:
-            return
-
+    def lock_failed_message(self):
         started = self.get_running_lock_date()
-        print "%s: lock has been found. Other cron started at %s" % \
-            (self.job_name, started)
-        print "Current timeout for job %s is %s seconds (cache key name is '%s')." % \
-            (self.job_name, self.timeout, self.lock_name)
+        msgs = [
+            "%s: lock has been found. Other cron started at %s" % \
+                (self.job_name, started),
+            "Current timeout for job %s is %s seconds (cache key name is '%s')." % \
+                (self.job_name, self.timeout, self.lock_name)
+        ]
+        return msgs
 
     def get_cache_by_name(self):
         '''
         Gets a specified cache (or the `default` cache if CRON_CACHE is not set)
         '''
-        cache_name = getattr(settings, 'CRON_CACHE', 'default')
+        cache_name = 'default'
+        if hasattr(settings, 'CRON_CACHE'):
+            warnings.warn("CRON_CACHE config variable was renamed into DJANGO_CRON_CACHE.", DeprecationWarning)
+            cache_name = settings.CRON_CACHE
+        cache_name = getattr(settings, 'DJANGO_CRON_CACHE', cache_name)
 
         # Allow the possible InvalidCacheBackendError to happen here
         # instead of allowing unexpected parallel runs of cron jobs
@@ -80,4 +83,8 @@ class CacheLock(DjangCronJobLock):
         return timeout
 
     def get_running_lock_date(self):
-        return timezone.make_aware(self.cache.get(self.lock_name), timezone.get_current_timezone())
+        date = self.cache.get(self.lock_name)
+        if not timezone.is_aware(date):
+            tz = timezone.get_current_timezone()
+            date = timezone.make_aware(date, tz)
+        return date
