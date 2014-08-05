@@ -4,6 +4,7 @@ import traceback
 import time
 
 from django_cron.models import CronJobLog
+from django.conf import settings
 
 try:
     from django.utils import timezone
@@ -11,6 +12,7 @@ except ImportError:
     # timezone added in Django 1.4
     import timezone
 
+logger = logging.getLogger('django_cron')
 
 class Schedule(object):
     def __init__(self, run_every_mins=None, run_at_times=[], retry_after_failure_mins=None):
@@ -33,11 +35,20 @@ class CronJobBase(object):
 
 class CronJobManager(object):
     """
-    A manager instance should be created per cron job to be run. Does all the logging tracking etc. for it.
+    A manager instance should be created per cron job to be run.
+    Does all the logger tracking etc. for it.
+    Used as a context manager via 'with' statement to ensure
+    proper logger in cases of job failure.
     """
 
-    @classmethod
-    def __should_run_now(self, cron_job, force=False):
+    def __init__(self, cron_job_class, silent=False, *args, **kwargs):
+        super(CronJobManager, self).__init__(*args, **kwargs)
+
+        self.cron_job_class = cron_job_class
+        self.silent         = silent
+
+    def should_run_now(self, force=False):
+        cron_job = self.cron_job
         """
         Returns a boolean determining whether this cron should run now or not!
         """
@@ -81,26 +92,58 @@ class CronJobManager(object):
                         return True
         return False
 
-    @classmethod
-    def run(self, cron_job, force=False, silent=False):
+    def __enter__(self):
+        cron_job = self.cron_job_class
+        self.cron_log = CronJobLog(code=cron_job.code, start_time=timezone.now())
+
+        return self
+
+    def __exit__(self, ex_type, ex_value, ex_traceback):
+        cron_log = self.cron_log
+        cron_msg = self.msg
+
+        if ex_type is not None:
+            # some exception occured during job execution
+            msg = traceback.format_exception(ex_type, ex_value, ex_traceback)
+            msg = "".join(msg)
+
+            if not self.silent:
+                if cron_msg:
+                    logger.info(cron_msg)
+                logger.error(msg)
+
+            if cron_msg:
+                offset = 1000 - len(cron_msg) - len(u'\n...\n')
+                msg = cron_msg + u'\n...\n' + msg[-offset:]
+            else:
+                msg = msg[-1000:]
+
+            cron_log.is_success = False
+            cron_log.message    = msg
+        else:
+            cron_log.is_success = True
+            cron_log.message    = cron_msg
+
+        cron_log.ran_at_time = getattr(self, 'user_time', None)
+        cron_log.end_time = timezone.now()
+        try:
+            cron_log.save()
+        except Exception as e:
+            msg = "Error saving cronjob log message: %s" % e
+            logger.error(msg)
+
+        return True # prevent exception propagation
+
+    def run(self, force=False):
         """
         apply the logic of the schedule and call do() on the CronJobBase class
         """
-        if not isinstance(cron_job, CronJobBase):
-            raise Exception('The cron_job to be run should be a subclass of %s' % CronJobBase.__class__)
-        if CronJobManager.__should_run_now(cron_job, force):
-            logging.debug("Running cron: %s" % cron_job)
-            cron_log = CronJobLog(code=cron_job.code, start_time=timezone.now())
-            try:
-                msg = cron_job.do()
-                cron_log.is_success = True
-                cron_log.message = msg or ''
-            except Exception:
-                error = traceback.format_exc()
-                if not silent:
-                    print(error)
-                cron_log.is_success = False
-                cron_log.message = error[-1000:]
-            cron_log.ran_at_time = self.user_time if self.user_time else None
-            cron_log.end_time = timezone.now()
-            cron_log.save()
+        cron_job_class = self.cron_job_class
+        if not issubclass(cron_job_class, CronJobBase):
+            raise Exception('The cron_job to be run must be a subclass of %s' % CronJobBase.__name__)
+
+        self.cron_job = cron_job_class()
+
+        if self.should_run_now(force):
+            logger.debug("Running cron: %s code %s" % (self.cron_job, self.cron_job.code))
+            self.msg = self.cron_job.do()
