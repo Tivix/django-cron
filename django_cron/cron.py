@@ -1,7 +1,6 @@
 from django.conf import settings
-from django_cron import CronJobBase, Schedule
+from django_cron import CronJobBase, Schedule, get_class
 from django_cron.models import CronJobLog
-from django_cron.management.commands.runcrons import get_class
 
 from django_common.helper import send_mail
 
