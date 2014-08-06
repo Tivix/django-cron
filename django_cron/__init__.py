@@ -110,6 +110,34 @@ class CronJobManager(object):
                         return True
         return False
 
+    def make_log(self, *messages, **kwargs):
+        cron_log = self.cron_log
+
+        cron_log.is_success  = kwargs.get('success', True)
+        cron_log.message     = self.make_log_msg(*messages)
+        cron_log.ran_at_time = getattr(self, 'user_time', None)
+        cron_log.end_time    = timezone.now()
+        cron_log.save()
+
+    def make_log_msg(self, msg, *other_messages):
+        MAX_MESSAGE_LENGTH = 1000
+        if not other_messages:
+            # assume that msg is a single string
+            return msg[-MAX_MESSAGE_LENGTH:]
+        else:
+            if len(msg):
+                msg += "\n...\n"
+                NEXT_MESSAGE_OFFSET = MAX_MESSAGE_LENGTH - len(msg)
+            else:
+                NEXT_MESSAGE_OFFSET = MAX_MESSAGE_LENGTH
+
+            if NEXT_MESSAGE_OFFSET > 0:
+                msg += other_messages[0][-NEXT_MESSAGE_OFFSET:]
+                return self.make_log_msg(msg, *other_messages[1:])
+            else:
+                return self.make_log_msg(msg)
+
+
     def __enter__(self):
         cron_job = self.cron_job_class
         self.cron_log = CronJobLog(code=cron_job.code, start_time=timezone.now())
@@ -117,43 +145,17 @@ class CronJobManager(object):
         return self
 
     def __exit__(self, ex_type, ex_value, ex_traceback):
-        cron_log = self.cron_log
-        cron_msg = self.msg
-
         if ex_type == self.lock_class.LockFailedException:
             if not self.silent:
                 logger.info(ex_value)
-            return True # prevent exception propagation
 
         elif ex_type is not None:
-            # some exception occured during job execution
-            msg = traceback.format_exception(ex_type, ex_value, ex_traceback)
-            msg = "".join(msg)
-
-            if not self.silent:
-                if cron_msg:
-                    logger.info(cron_msg)
-                logger.error(msg)
-
-            if cron_msg:
-                offset = 1000 - len(cron_msg) - len(u'\n...\n')
-                msg = cron_msg + u'\n...\n' + msg[-offset:]
-            else:
-                msg = msg[-1000:]
-
-            cron_log.is_success = False
-            cron_log.message    = msg
-        else:
-            cron_log.is_success = True
-            cron_log.message    = cron_msg
-
-        cron_log.ran_at_time = getattr(self, 'user_time', None)
-        cron_log.end_time = timezone.now()
-        try:
-            cron_log.save()
-        except Exception as e:
-            msg = "Error saving cronjob log message: %s" % e
-            logger.error(msg)
+            try:
+                trace = "".join(traceback.format_exception(ex_type, ex_value, ex_traceback))
+                self.make_log(self.msg, trace, success=False)
+            except Exception as e:
+                err_msg = "Error saving cronjob log message: %s" % e
+                logger.error(err_msg)
 
         return True # prevent exception propagation
 
@@ -169,8 +171,9 @@ class CronJobManager(object):
             self.cron_job = cron_job_class()
 
             if self.should_run_now(force):
-                logger.debug("Running cron: %s code %s" % (self.cron_job, self.cron_job.code))
+                logger.debug("Running cron: %s code %s", cron_job_class.__name__, self.cron_job.code)
                 self.msg = self.cron_job.do()
+                self.make_log(self.msg, success=True)
 
     def get_lock_class(self):
         name = getattr(settings, 'DJANGO_CRON_LOCK_BACKEND', DEFAULT_LOCK_BACKEND)
