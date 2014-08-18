@@ -17,8 +17,10 @@ try:
 except ImportError:
     # timezone added in Django 1.4
     from django_cron import timezone
-from django.db import close_connection
-
+try:
+    from django.db import close_old_connections as close_connection
+except ImportError:
+    from django.db import close_connection
 
 DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
 
