@@ -113,6 +113,9 @@ class CronJobManager(object):
     def make_log(self, *messages, **kwargs):
         cron_log = self.cron_log
 
+        cron_job      = getattr(self, 'cron_job', self.cron_job_class)
+        cron_log.code = cron_job.code
+
         cron_log.is_success  = kwargs.get('success', True)
         cron_log.message     = self.make_log_msg(*messages)
         cron_log.ran_at_time = getattr(self, 'user_time', None)
@@ -139,8 +142,7 @@ class CronJobManager(object):
 
 
     def __enter__(self):
-        cron_job = self.cron_job_class
-        self.cron_log = CronJobLog(code=cron_job.code, start_time=timezone.now())
+        self.cron_log = CronJobLog(start_time=timezone.now())
 
         return self
 
