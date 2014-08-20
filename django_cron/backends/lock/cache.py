@@ -57,7 +57,10 @@ class CacheLock(DjangoCronJobLock):
         Gets a specified cache (or the `default` cache if CRON_CACHE is not set)
         '''
         cache_name = 'default'
-        cache_name = getattr(settings, 'CRON_CACHE', cache_name)
+        if hasattr(settings, 'CRON_CACHE'):
+            warnings.warn("CRON_CACHE config variable was renamed into DJANGO_CRON_CACHE.", DeprecationWarning)
+            cache_name = settings.CRON_CACHE
+        cache_name = getattr(settings, 'DJANGO_CRON_CACHE', cache_name)
 
         # Allow the possible InvalidCacheBackendError to happen here
         # instead of allowing unexpected parallel runs of cron jobs
