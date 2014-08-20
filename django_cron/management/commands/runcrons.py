@@ -1,40 +1,15 @@
 import sys
-from datetime import datetime
 from optparse import make_option
 import traceback
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
-try:
-    from django.core.cache import caches
-except ImportError:
-    # `caches` added in 1.7
-    from django.core.cache import get_cache
-
-from django_cron import CronJobManager
-try:
-    from django.utils import timezone
-except ImportError:
-    # timezone added in Django 1.4
-    from django_cron import timezone
+from django_cron import CronJobManager, get_class
 from django.db import close_connection
 
 
 DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
 
-
-def get_class(kls):
-    """
-    TODO: move to django-common app.
-    Converts a string to a class.
-    Courtesy: http://stackoverflow.com/questions/452969/does-python-have-an-equivalent-to-java-class-forname/452981#452981
-    """
-    parts = kls.split('.')
-    module = ".".join(parts[:-1])
-    m = __import__(module)
-    for comp in parts[1:]:
-        m = getattr(m, comp)
-    return m
 
 
 class Command(BaseCommand):
@@ -71,49 +46,10 @@ def run_cron_with_cache_check(cron_class, force=False, silent=False):
     Checks the cache and runs the cron or not.
 
     @cron_class - cron class to run.
+    @force      - run job even if not scheduled
+    @silent     - suppress notifications
     """
-    cache     = get_cache_by_name()
-    cache_key = get_cache_key_name(cron_class)
-    timeout   = get_cache_timeout(cron_class)
 
-    if not cache.get(cache_key) or getattr(cron_class, 'ALLOW_PARALLEL_RUNS', False):
-        cache.set(cache_key, timezone.now(), timeout)
-        try:
-            instance = cron_class()
-            CronJobManager.run(instance, force, silent)
-        except:
-            error = traceback.format_exc()
-            print('Error running cron job, got exception:\n%s' % error)
-        cache.delete(cache_key)
-    else:
-        if not silent:
-            started = timezone.make_aware(cache.get(cache_key), timezone.get_current_timezone())
-            print "%s wasn't run: lock has been found. Other cron started at %s" % \
-                (cron_class.__name__, started)
-            print "Current timeout for job %s is %s seconds (cache key name is '%s')" % \
-                (cron_class.__name__, timeout, cache_key)
+    with CronJobManager(cron_class, silent) as manager:
+        manager.run(force)
 
-def get_cache_by_name():
-    '''
-    Gets a specified cache (or the `default` cache if CRON_CACHE is not set)
-    '''
-    cache_name = getattr(settings, 'CRON_CACHE', 'default')
-    # Allow the possible InvalidCacheBackendError to happen here
-    # instead of allowing unexpected parallel runs of cron jobs
-    try:
-        # Django >= 1.7.*
-        return caches[cache_name]
-    except NameError:
-        # Django <= 1.6.*
-        return get_cache(cache_name)
-
-def get_cache_key_name(cron_class):
-    return cron_class.__name__
-
-def get_cache_timeout(cron_class):
-    timeout = DEFAULT_LOCK_TIME
-    try:
-        timeout = getattr(cron_class, 'DJANGO_CRON_LOCK_TIME', settings.DJANGO_CRON_LOCK_TIME)
-    except:
-        pass
-    return timeout
