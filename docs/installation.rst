@@ -1,0 +1,46 @@
+Installation
+============
+
+1. Install ``django_cron`` (ideally in your virtualenv!) using pip or simply getting a copy of the code and putting it in a directory in your codebase.
+
+2. Add ``django_cron`` to your Django settings ``INSTALLED_APPS``:
+
+.. code-block:: python
+
+    INSTALLED_APPS = [
+        # ...
+        "django_cron",
+    ]
+
+3. If you're using South for schema migrations run ``python manage.py migrate django_cron`` or simply do a ``syncdb``.
+
+4. Write a cron class somewhere in your code, that extends the `CronJobBase` class. This class will look something like this:
+
+.. code-block:: python
+
+    from django_cron import CronJobBase, Schedule
+
+    class MyCronJob(CronJobBase):
+        RUN_EVERY_MINS = 120 # every 2 hours
+
+        schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
+        code = 'my_app.my_cron_job'    # a unique code
+
+        def do(self):
+            pass    # do your thing here
+
+5. Add a variable called ``CRON_CLASSES`` (similar to ``MIDDLEWARE_CLASSES`` etc.) thats a list of strings, each being a cron class. Eg.:
+
+.. code-block:: python
+
+    CRON_CLASSES = [
+        "my_app.cron.MyCronJob",
+        # ...
+    ]
+
+6. Now everytime you run the management command ``python manage.py runcrons`` all the crons will run if required. Depending on the application the management command can be called from the Unix crontab as often as required. Every 5 minutes usually works for most of my applications, for example:
+
+.. code-block:: python
+
+    > crontab -e
+    */5 * * * * source /home/ubuntu/.bashrc && source /home/ubuntu/work/your-project/bin/activate && python /home/ubuntu/work/your-project/src/manage.py runcrons > /home/ubuntu/cronjob.log
