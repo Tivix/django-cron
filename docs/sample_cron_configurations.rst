@@ -74,3 +74,32 @@ If you wish to override which cache is used, put this in your settings file:
 .. code-block:: python
 
     CRON_CACHE = 'cron_cache'
+
+
+FailedRunsNotificationCronJob
+-----------------------------
+
+This example cron check last cron jobs results. If they were unsuccessfull 10 times in row, it sends email to user.
+
+Install required dependencies: 'Django>=1.5.0', 'South>=0.7.2', 'django-common>=0.5.1'.
+
+Add 'django_cron.cron.FailedRunsNotificationCronJob' to your CRON_CLASSES in settings file.
+
+To set up minimal number of failed runs set up MIN_NUM_FAILURES in your cron class (default = 10). For example:
+
+class MyCronJob(CronJobBase):
+    RUN_EVERY_MINS = 10
+    MIN_NUM_FAILURES = 3
+
+    schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
+    code = 'app.MyCronJob'
+
+    def do(self):
+        ... some action here ...
+Emails are imported from ADMINS in settings file
+
+To set up email prefix, you must add FAILED_RUNS_CRONJOB_EMAIL_PREFIX in your settings file (default is empty). For example:
+
+FAILED_RUNS_CRONJOB_EMAIL_PREFIX = "[Server check]: "
+FailedRunsNotificationCronJob checks every cron from CRON_CLASSES
+
