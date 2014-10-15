@@ -73,7 +73,7 @@ If you wish to override which cache is used, put this in your settings file:
 
 .. code-block:: python
 
-    CRON_CACHE = 'cron_cache'
+    DJANGO_CRON_CACHE = 'cron_cache'
 
 
 FailedRunsNotificationCronJob
