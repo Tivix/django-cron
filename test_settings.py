@@ -15,3 +15,9 @@ INSTALLED_APPS = [
 ]
 
 SECRET_KEY = "wknfgl34qtnjo&Yk3jqfjtn2k3jtnk4wtnk"
+
+
+CRON_CLASSES = [
+    'test_crons.TestSucessCronJob',
+    'test_crons.TestErrorCronJob',
+]
