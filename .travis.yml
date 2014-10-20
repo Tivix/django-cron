@@ -5,6 +5,7 @@ python:
 env:
   - DJANGO=1.5.4 DJANGO_SETTINGS_MODULE="django_cron.test_settings"
 env:
+  - DJANGO=1.4.15
   - DJANGO=1.5.10
   - DJANGO=1.6.7
 install:
