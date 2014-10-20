@@ -8,15 +8,13 @@ except ImportError:
     use_setuptools()
     from setuptools import setup, find_packages
     from setuptools.command.test import test
-
-
 import os
+
 
 here = os.path.dirname(os.path.abspath(__file__))
 f = open(os.path.join(here,  'README.rst'))
 long_description = f.read().strip()
 f.close()
-
 
 setup(
     name='django-cron',
@@ -36,12 +34,11 @@ setup(
     ],
     test_suite='runtests.runtests',
     include_package_data=True,
-    # cmdclass={},
     classifiers=[
         'Framework :: Django',
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'Operating System :: OS Independent',
         'Topic :: Software Development'
-    ],
+    ]
 )

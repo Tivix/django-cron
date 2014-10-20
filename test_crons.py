@@ -1,3 +1,5 @@
+from time import sleep
+
 from django_cron import CronJobBase, Schedule
 
 
@@ -14,4 +16,14 @@ class TestErrorCronJob(CronJobBase):
     schedule = Schedule(run_every_mins=0)
 
     def do(self):
-        raise
+        raise Exception()
+
+
+class TestSleepingCronJob(CronJobBase):
+    code = 'test_sleeping_cron_job'
+    schedule = Schedule(run_every_mins=0)
+
+    def do(self):
+        print 'do: start'
+        sleep(1)
+        print 'do: end'

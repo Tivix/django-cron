@@ -1,16 +1,22 @@
 import django
 
-if django.VERSION[:2] >= (1, 3):
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': ':memory:',
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'mydatabase',
     }
-else:
-    DATABASE_ENGINE = 'sqlite3'
+}
 
 INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.humanize',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.sites',
+    'django.contrib.sitemaps',
+    'django.contrib.staticfiles',
+
     'django_cron',
 ]
 
@@ -21,3 +27,25 @@ CRON_CLASSES = [
     'test_crons.TestSucessCronJob',
     'test_crons.TestErrorCronJob',
 ]
+
+
+LOGGING = 'django_cron'
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'null': {
+            'level': 'DEBUG',
+            'class': 'django.utils.log.NullHandler',
+        },
+    },
+    'loggers': {
+        'django_cron': {
+            'handlers': ['null'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    }
+}
