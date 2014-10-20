@@ -5,12 +5,8 @@ import time
 
 from django_cron.models import CronJobLog
 from django.conf import settings
+from django.utils import timezone
 
-try:
-    from django.utils import timezone
-except ImportError:
-    # timezone added in Django 1.4
-    import timezone
 
 DEFAULT_LOCK_BACKEND = 'django_cron.backends.lock.cache.CacheLock'
 logger = logging.getLogger('django_cron')
