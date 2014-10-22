@@ -6,6 +6,17 @@
 Welcome to django-cron's documentation!
 =======================================
 
+.. image:: https://travis-ci.org/Tivix/django-cron.png
+    :target: https://travis-ci.org/Tivix/django-cron
+
+
+.. image:: https://coveralls.io/repos/Tivix/django-cron/badge.png
+    :target: https://coveralls.io/r/Tivix/django-cron?branch=master
+
+
+.. image:: https://readthedocs.org/projects/django-cron/badge/?version=latest
+    :target: https://readthedocs.org/projects/django-cron/?badge=latest
+
 Contents:
 
 .. toctree::
