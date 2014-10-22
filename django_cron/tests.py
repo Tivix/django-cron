@@ -1,4 +1,3 @@
-import sys
 import threading
 from time import sleep
 
@@ -80,8 +79,16 @@ class TestCase(unittest.TestCase):
         self.client = Client()
         self.client.login(username=user.username, password=password)
 
+        # get list of CronJobLogs
         url = reverse('admin:django_cron_cronjoblog_changelist')
         response = self.client.get(url)
+
+        # edit CronJobLog object
+        call_command('runcrons', self.success_cron, force=True)
+        log = CronJobLog.objects.all()[0]
+        url = reverse('admin:django_cron_cronjoblog_change', args=(log.id,))
+        response = self.client.get(url)
+
         self.assertIn('Cron job logs', response.content)
 
     def run_cronjob_in_thread(self, logs_count):
@@ -89,7 +96,25 @@ class TestCase(unittest.TestCase):
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
         db.close_connection()
 
-    def test_threading(self):
+    def test_cache_locking_backend(self):
+        """
+        with cache locking backend
+        """
+        logs_count = CronJobLog.objects.all().count()
+        t = threading.Thread(target=self.run_cronjob_in_thread, args=(logs_count,))
+        t.daemon = True
+        t.start()
+        # this shouldn't get running
+        sleep(0.1)  # to avoid race condition
+        call_command('runcrons', self.wait_3sec_cron)
+        t.join(10)
+        self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
+
+    @override_settings(DJANGO_CRON_LOCK_BACKEND='django_cron.backends.lock.file.FileLock')
+    def test_file_locking_backend_in_thread(self):
+        """
+        with file locking backend
+        """
         logs_count = CronJobLog.objects.all().count()
         t = threading.Thread(target=self.run_cronjob_in_thread, args=(logs_count,))
         t.daemon = True
@@ -101,7 +126,11 @@ class TestCase(unittest.TestCase):
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
     def test_failed_runs_notification(self):
+        CronJobLog.objects.all().delete()
         logs_count = CronJobLog.objects.all().count()
-        call_command('runcrons', self.test_failed_runs_notification_cron)
-        self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
+        for i in range(10):
+            call_command('runcrons', self.error_cron, force=True)
+        call_command('runcrons', self.test_failed_runs_notification_cron)
+
+        self.assertEqual(CronJobLog.objects.all().count(), logs_count + 11)

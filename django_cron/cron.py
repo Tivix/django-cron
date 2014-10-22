@@ -42,8 +42,8 @@ class FailedRunsNotificationCronJob(CronJobBase):
                     failures += 1
                     message += 'Job ran at %s : \n\n %s \n\n' % (job.start_time, job.message)
 
+            print '>', failures, min_failures
             if failures == min_failures:
-
                 send_mail(
                     '%s%s failed %s times in a row!' % (FAILED_RUNS_CRONJOB_EMAIL_PREFIX, cron.code, \
                         min_failures), message,
