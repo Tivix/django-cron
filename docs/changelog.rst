@@ -6,6 +6,8 @@ Changelog
 
     - Added locking backends
 
+    - Added tests
+
 
 0.3.4
 ------
