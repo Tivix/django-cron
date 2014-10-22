@@ -27,7 +27,6 @@ SECRET_KEY = "wknfgl34qtnjo&Yk3jqfjtn2k3jtnk4wtnk"
 CRON_CLASSES = [
     'test_crons.TestSucessCronJob',
     'test_crons.TestErrorCronJob',
-    'test_crons.TestSleepingCronJob',
     'test_crons.Test5minsCronJob',
     'test_crons.TestRunAtTimesCronJob',
     'test_crons.Wiat3secCronJob',

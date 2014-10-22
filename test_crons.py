@@ -19,16 +19,6 @@ class TestErrorCronJob(CronJobBase):
         raise Exception()
 
 
-class TestSleepingCronJob(CronJobBase):
-    code = 'test_sleeping_cron_job'
-    schedule = Schedule(run_every_mins=0)
-
-    def do(self):
-        print 'do: start'
-        sleep(1)
-        print 'do: end'
-
-
 class Test5minsCronJob(CronJobBase):
     code = 'test_run_every_mins'
     schedule = Schedule(run_every_mins=5)
@@ -46,8 +36,8 @@ class TestRunAtTimesCronJob(CronJobBase):
 
 
 class Wiat3secCronJob(CronJobBase):
-    code = 'test_run_at_times'
-    schedule = Schedule(run_at_times=['0:00', '0:05'])
+    code = 'test_wait_3_seconds'
+    schedule = Schedule(run_every_mins=5)
 
     def do(self):
         sleep(3)
