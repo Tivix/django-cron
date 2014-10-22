@@ -1,1 +1,2 @@
 freezegun==0.1.19
+mysql-python==1.2.5
