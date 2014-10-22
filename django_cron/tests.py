@@ -1,3 +1,8 @@
+import sys
+import threading
+from time import sleep
+
+from django import db
 from django.utils import unittest
 from django_cron.models import CronJobLog
 from django.core.management import call_command
@@ -16,6 +21,8 @@ class TestCase(unittest.TestCase):
     sleeping_cron = 'test_crons.TestSleepingCronJob'
     five_mins_cron = 'test_crons.Test5minsCronJob'
     run_at_times_cron = 'test_crons.TestRunAtTimesCronJob'
+    wait_3sec_cron = 'test_crons.Wiat3secCronJob'
+    test_failed_runs_notification_cron = 'django_cron.cron.FailedRunsNotificationCronJob'
 
     def setUp(self):
         pass
@@ -76,3 +83,25 @@ class TestCase(unittest.TestCase):
         url = reverse('admin:django_cron_cronjoblog_changelist')
         response = self.client.get(url)
         self.assertIn('Cron job logs', response.content)
+
+    def run_cronjob_in_thread(self, logs_count):
+        call_command('runcrons', self.wait_3sec_cron)
+        self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
+        db.close_connection()
+
+    def test_threading(self):
+        logs_count = CronJobLog.objects.all().count()
+        t = threading.Thread(target=self.run_cronjob_in_thread, args=(logs_count,))
+        t.daemon = True
+        t.start()
+        # this shouldn't get running
+        sleep(0.1)  # to avoid race condition
+        call_command('runcrons', self.wait_3sec_cron)
+        t.join(10)
+        self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
+
+    def test_failed_runs_notification(self):
+        logs_count = CronJobLog.objects.all().count()
+        call_command('runcrons', self.test_failed_runs_notification_cron)
+        self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
+

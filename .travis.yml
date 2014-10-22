@@ -3,8 +3,6 @@ python:
   - "2.6"
   - "2.7"
 env:
-  - DJANGO=1.5.4 DJANGO_SETTINGS_MODULE="django_cron.test_settings"
-env:
   - DJANGO=1.5.10
   - DJANGO=1.6.7
 install:
@@ -12,8 +10,8 @@ install:
   - pip install coveralls
   - pip install -r test_requirements.pip
 script:
-  - python setup.py test
-script:
   - coverage run --source=django_cron setup.py test
 after_success:
   - coveralls
+before_script:
+  - mysql -e 'create database djangocron;'

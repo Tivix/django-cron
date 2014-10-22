@@ -43,3 +43,11 @@ class TestRunAtTimesCronJob(CronJobBase):
 
     def do(self):
         pass
+
+
+class Wiat3secCronJob(CronJobBase):
+    code = 'test_run_at_times'
+    schedule = Schedule(run_at_times=['0:00', '0:05'])
+
+    def do(self):
+        sleep(3)

@@ -1,9 +1,10 @@
-import django
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'mydatabase',
+        'ENGINE': 'django.db.backends.mysql',
+        'USER': 'travis',
+        'NAME': 'djangocron',
+        'TEST_NAME': 'djangocron_test',
     }
 }
 
@@ -29,11 +30,9 @@ CRON_CLASSES = [
     'test_crons.TestSleepingCronJob',
     'test_crons.Test5minsCronJob',
     'test_crons.TestRunAtTimesCronJob',
+    'test_crons.Wiat3secCronJob',
+    'django_cron.cron.FailedRunsNotificationCronJob'
 ]
-
-
-LOGGING = 'django_cron'
-
 
 LOGGING = {
     'version': 1,
@@ -50,6 +49,13 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+    }
+}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': 'django_cache',
     }
 }
 
