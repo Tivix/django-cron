@@ -27,7 +27,9 @@ def get_class(kls):
 
 
 class Schedule(object):
-    def __init__(self, run_every_mins=None, run_at_times=[], retry_after_failure_mins=None):
+    def __init__(self, run_every_mins=None, run_at_times=None, retry_after_failure_mins=None):
+        if run_at_times is None:
+            run_at_times = []
         self.run_every_mins = run_every_mins
         self.run_at_times = run_at_times
         self.retry_after_failure_mins = retry_after_failure_mins
