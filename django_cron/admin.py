@@ -12,21 +12,21 @@ class DurationFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return (
-            ('lt_minute', _('< 1 minute')),
-            ('lt_hour', _('< 1 hour')),
-            ('lt_day', _('< 1 day')),
-            ('gte_day', _('>= 1 day')),
+            ('lte_minute', _('<= 1 minute')),
+            ('gt_minute', _('> 1 minute')),
+            ('gt_hour', _('> 1 hour')),
+            ('gt_day', _('> 1 day')),
         )
 
     def queryset(self, request, queryset):
-        if self.value() == 'lt_minute':
-            return queryset.extra(where=["end_time-start_time < %s"], params=[timedelta(minutes=1)])
-        if self.value() == 'lt_hour':
-            return queryset.extra(where=["end_time-start_time < %s"], params=[timedelta(hours=1)])
-        if self.value() == 'lt_day':
-            return queryset.extra(where=["end_time-start_time < %s"], params=[timedelta(days=1)])
-        if self.value() == 'gte_day':
-            return queryset.extra(where=["end_time-start_time >= %s"], params=[timedelta(days=1)])
+        if self.value() == 'lte_minute':
+            return queryset.extra(where=["end_time-start_time <= %s"], params=[timedelta(minutes=1)])
+        if self.value() == 'gt_minute':
+            return queryset.extra(where=["end_time-start_time > %s"], params=[timedelta(minutes=1)])
+        if self.value() == 'gt_hour':
+            return queryset.extra(where=["end_time-start_time > %s"], params=[timedelta(hours=1)])
+        if self.value() == 'gt_day':
+            return queryset.extra(where=["end_time-start_time > %s"], params=[timedelta(days=1)])
 
 
 class CronJobLogAdmin(admin.ModelAdmin):
