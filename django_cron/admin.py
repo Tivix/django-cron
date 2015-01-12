@@ -1,5 +1,6 @@
 from datetime import timedelta
 from django.contrib import admin
+from django.db.models import F
 from django.utils.translation import ugettext_lazy as _
 
 from helpers import humanize_duration
@@ -20,13 +21,13 @@ class DurationFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == 'lte_minute':
-            return queryset.extra(where=["end_time-start_time <= %s"], params=[timedelta(minutes=1)])
+            return queryset.filter(end_time__lte=F('start_time') + timedelta(minutes=1))
         if self.value() == 'gt_minute':
-            return queryset.extra(where=["end_time-start_time > %s"], params=[timedelta(minutes=1)])
+            return queryset.filter(end_time__gt=F('start_time') + timedelta(minutes=1))
         if self.value() == 'gt_hour':
-            return queryset.extra(where=["end_time-start_time > %s"], params=[timedelta(hours=1)])
+            return queryset.filter(end_time__gt=F('start_time') + timedelta(hours=1))
         if self.value() == 'gt_day':
-            return queryset.extra(where=["end_time-start_time > %s"], params=[timedelta(days=1)])
+            return queryset.filter(end_time__gt=F('start_time') + timedelta(days=1))
 
 
 class CronJobLogAdmin(admin.ModelAdmin):
