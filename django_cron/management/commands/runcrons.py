@@ -5,7 +5,7 @@ import traceback
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from django_cron import CronJobManager, get_class
-from django.db import close_connection
+from django.db import close_old_connections
 
 
 DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
@@ -38,7 +38,7 @@ class Command(BaseCommand):
         for cron_class in crons_to_run:
             run_cron_with_cache_check(cron_class, force=options['force'],
                 silent=options['silent'])
-        close_connection()
+        close_old_connections()
 
 
 def run_cron_with_cache_check(cron_class, force=False, silent=False):
