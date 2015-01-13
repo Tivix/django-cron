@@ -45,13 +45,8 @@ class CronJobLogAdmin(admin.ModelAdmin):
             return self.readonly_fields + tuple(names)
         return self.readonly_fields
 
-    def queryset(self, request):
-        qs = super(CronJobLogAdmin, self).queryset(request)
-        qs = qs.extra(select={'duration': 'end_time-start_time'})
-        return qs
-
     def humanize_duration(self, obj):
-        return humanize_duration(obj.duration)
+        return humanize_duration(obj.end_time - obj.start_time)
     humanize_duration.short_description = _("Duration")
     humanize_duration.admin_order_field = 'duration'
 
