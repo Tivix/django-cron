@@ -8,7 +8,7 @@ env:
 matrix:
   exclude:
     - python: "2.6"
-      env: DJANGO=1.7
+      env: DJANGO=1.7.2
 install:
   - pip install -q Django==$DJANGO --use-mirrors
   - pip install coveralls
