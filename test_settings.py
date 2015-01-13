@@ -33,6 +33,11 @@ CRON_CLASSES = [
     'django_cron.cron.FailedRunsNotificationCronJob'
 ]
 
+MIDDLEWARE_CLASSES = [
+     'django.contrib.sessions.middleware.SessionMiddleware',
+     'django.contrib.auth.middleware.AuthenticationMiddleware'
+]
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.3.6
+------
+
+    - Added Django 1.7 support
+
+
 0.3.5
 ------
 

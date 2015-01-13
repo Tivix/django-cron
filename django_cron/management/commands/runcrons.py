@@ -5,7 +5,10 @@ import traceback
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from django_cron import CronJobManager, get_class
-from django.db import close_connection
+try:
+    from django.db import close_old_connections as close_connection
+except ImportError:
+    from django.db import close_connection
 
 
 DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
