@@ -2,13 +2,16 @@ language: python
 python:
   - "2.6"
   - "2.7"
+  - "3.4"
 env:
   - DJANGO=1.6.9
-  - DJANGO=1.7.2
+  - DJANGO=1.7.4
 matrix:
   exclude:
     - python: "2.6"
-      env: DJANGO=1.7.2
+      env: DJANGO=1.7.4
+    - python: "3.4"
+      env: DJANGO=1.6.9
 install:
   - pip install -q Django==$DJANGO --use-mirrors
   - pip install coveralls
