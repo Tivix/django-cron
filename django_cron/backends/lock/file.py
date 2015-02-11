@@ -1,4 +1,4 @@
-from base import DjangoCronJobLock
+from django_cron.backends.lock.base import DjangoCronJobLock
 
 from django.conf import settings
 from django.core.files import locks
