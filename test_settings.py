@@ -1,7 +1,7 @@
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'django.db.backends.sqlite3',
         'USER': 'travis',
         'NAME': 'djangocron',
         'TEST_NAME': 'djangocron_test',
