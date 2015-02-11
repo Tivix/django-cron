@@ -6,6 +6,8 @@ Changelog
 
     - Added Django 1.7 support
 
+    - Added python3 support
+
 
 0.3.5
 ------
