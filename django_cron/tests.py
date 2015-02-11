@@ -88,8 +88,7 @@ class TestCase(unittest.TestCase):
         log = CronJobLog.objects.all()[0]
         url = reverse('admin:django_cron_cronjoblog_change', args=(log.id,))
         response = self.client.get(url)
-
-        self.assertIn('Cron job logs', response.content)
+        self.assertIn('Cron job logs', str(response.content))
 
     def run_cronjob_in_thread(self, logs_count):
         call_command('runcrons', self.wait_3sec_cron)

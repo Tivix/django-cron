@@ -42,8 +42,8 @@ class FileLock(DjangoCronJobLock):
             if e.errno in (errno.EACCES, errno.EAGAIN):
                 return False
             else:
-                t, v, tb = sys.exc_info()
-                raise t, v, tb
+                e = sys.exc_info()[1]
+                raise e
         # TODO: perhaps on windows I need to catch different exception type
 
     def release(self):
