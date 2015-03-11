@@ -1,5 +1,5 @@
 import logging
-from datetime import timedelta, datetime
+from datetime import timedelta
 import traceback
 import time
 
@@ -100,9 +100,9 @@ class CronJobManager(object):
         if cron_job.schedule.run_at_times:
             for time_data in cron_job.schedule.run_at_times:
                 user_time = time.strptime(time_data, "%H:%M")
-                actual_time = time.strptime("%s:%s" % (datetime.now().hour, datetime.now().minute), "%H:%M")
+                actual_time = time.strptime("%s:%s" % (timezone.now().hour, timezone.now().minute), "%H:%M")
                 if actual_time >= user_time:
-                    qset = CronJobLog.objects.filter(code=cron_job.code, start_time__gt=datetime.today().date(), ran_at_time=time_data)
+                    qset = CronJobLog.objects.filter(code=cron_job.code, start_time__gt=timezone.now(), ran_at_time=time_data)
                     if not qset:
                         self.user_time = time_data
                         return True
