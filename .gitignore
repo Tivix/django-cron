@@ -4,3 +4,4 @@ dist/
 django_cron.egg-info/
 # Sphinx documentation
 docs/_build/
+*egg*
