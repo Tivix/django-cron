@@ -66,3 +66,10 @@ CACHES = {
 ROOT_URLCONF = 'test_urls'
 SITE_ID = 1
 STATIC_URL = '/static/'
+
+try:
+    from django.db import migrations
+except ImportError:
+    SOUTH_MIGRATION_MODULES = {
+        'django_cron': 'django_cron.south_migrations',
+    }
