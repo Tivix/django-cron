@@ -9,7 +9,9 @@ from django.utils import timezone
 
 
 DEFAULT_LOCK_BACKEND = 'django_cron.backends.lock.cache.CacheLock'
+default_app_config = 'django_cron.apps.DjangoCronDefaultAppConfig'
 logger = logging.getLogger('django_cron')
+
 
 def get_class(kls):
     """
