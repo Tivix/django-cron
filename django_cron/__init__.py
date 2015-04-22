@@ -1,11 +1,12 @@
 import logging
-from datetime import timedelta, datetime
+from datetime import timedelta
 import traceback
 import time
 
 from django_cron.models import CronJobLog
 from django.conf import settings
 from django.utils import timezone
+from django.db.models import Q
 
 
 DEFAULT_LOCK_BACKEND = 'django_cron.backends.lock.cache.CacheLock'
@@ -100,9 +101,15 @@ class CronJobManager(object):
         if cron_job.schedule.run_at_times:
             for time_data in cron_job.schedule.run_at_times:
                 user_time = time.strptime(time_data, "%H:%M")
-                actual_time = time.strptime("%s:%s" % (datetime.now().hour, datetime.now().minute), "%H:%M")
+                now = timezone.now()
+                actual_time = time.strptime("%s:%s" % (now.hour, now.minute), "%H:%M")
                 if actual_time >= user_time:
-                    qset = CronJobLog.objects.filter(code=cron_job.code, start_time__gt=datetime.today().date(), ran_at_time=time_data)
+                    qset = CronJobLog.objects.filter(
+                        code=cron_job.code, ran_at_time=time_data, is_success=True).filter(
+                            Q(start_time__gt=now) |
+                            Q(end_time__gte=now.replace(hour=0, minute=0,
+                                                        second=0,
+                                                        microsecond=0)))
                     if not qset:
                         self.user_time = time_data
                         return True
