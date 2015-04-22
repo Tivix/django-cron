@@ -10,6 +10,8 @@ Changelog
 
     - Dropped South in favor of Django migrations
 
+    - WARNING! When upgrading you might need to remove existing South migrations, read more: https://docs.djangoproject.com/en/1.7/topics/migrations/#upgrading-from-south
+
 
 0.3.6
 ------
