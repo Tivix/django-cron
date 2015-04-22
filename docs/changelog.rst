@@ -1,6 +1,18 @@
 Changelog
 =========
 
+0.4.0
+------
+
+    - Added support for Django 1.8
+
+    - Minimum Django version required is 1.7
+
+    - Dropped South in favor of Django migrations
+
+    - WARNING! When upgrading you might need to remove existing South migrations, read more: https://docs.djangoproject.com/en/1.7/topics/migrations/#upgrading-from-south
+
+
 0.3.6
 ------
 
