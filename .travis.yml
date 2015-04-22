@@ -6,10 +6,13 @@ python:
 env:
   - DJANGO=1.6.9
   - DJANGO=1.7.4
+  - DJANGO=1.8
 matrix:
   exclude:
     - python: "2.6"
       env: DJANGO=1.7.4
+    - python: "2.6"
+      env: DJANGO=1.8
     - python: "3.4"
       env: DJANGO=1.6.9
 install:
