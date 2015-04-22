@@ -12,7 +12,7 @@ Installation
         "django_cron",
     ]
 
-3. If you're using South for schema migrations run ``python manage.py migrate django_cron`` or simply do a ``syncdb``.
+3. Run ``python manage.py migrate django_cron``
 
 4. Write a cron class somewhere in your code, that extends the `CronJobBase` class. This class will look something like this:
 

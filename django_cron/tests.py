@@ -1,6 +1,5 @@
 import threading
 from time import sleep
-import os
 
 from django import db
 from django.utils import unittest
@@ -81,7 +80,6 @@ class TestCase(unittest.TestCase):
 
         # get list of CronJobLogs
         url = reverse('admin:django_cron_cronjoblog_changelist')
-        response = self.client.get(url)
 
         # edit CronJobLog object
         call_command('runcrons', self.success_cron, force=True)
@@ -93,7 +91,7 @@ class TestCase(unittest.TestCase):
     def run_cronjob_in_thread(self, logs_count):
         call_command('runcrons', self.wait_3sec_cron)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
-        db.close_connection()
+        db.close_old_connections()
 
     def test_cache_locking_backend(self):
         """
