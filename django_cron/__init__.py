@@ -119,12 +119,17 @@ class CronJobManager(object):
                 now = timezone.now()
                 actual_time = time.strptime("%s:%s" % (now.hour, now.minute), "%H:%M")
                 if actual_time >= user_time:
-                    now = timezone.now()
-                    now.hour, now.minute, now.second, now.microsecond = 0, 0, 0, 0
-                    qset = CronJobLog.objects.filter(code=cron_job.code, start_time__gt=now, ran_at_time=time_data)
+                    qset = CronJobLog.objects.filter(
+                        code=cron_job.code,
+                        ran_at_time=time_data,
+                        is_success=True
+                    ).filter(
+                        Q(start_time__gt=now) | Q(end_time__gte=now.replace(hour=0, minute=0, second=0, microsecond=0))
+                    )
                     if not qset:
                         self.user_time = time_data
                         return True
+
         return False
 
     def make_log(self, *messages, **kwargs):
