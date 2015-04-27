@@ -29,7 +29,7 @@ def runtests():
         reload_settings(settings)
 
         TestRunner = get_runner(settings)
-        test_runner = TestRunner(verbosity=1, interactive=True)
+        test_runner = TestRunner(verbosity=1, interactive=False)
         if hasattr(django, 'setup'):
             django.setup()
         failures += test_runner.run_tests(['django_cron'])
