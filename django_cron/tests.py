@@ -19,7 +19,7 @@ class TestCase(unittest.TestCase):
     error_cron = 'test_crons.TestErrorCronJob'
     five_mins_cron = 'test_crons.Test5minsCronJob'
     run_at_times_cron = 'test_crons.TestRunAtTimesCronJob'
-    wait_3sec_cron = 'test_crons.Wiat3secCronJob'
+    wait_3sec_cron = 'test_crons.Wait3secCronJob'
     test_failed_runs_notification_cron = 'django_cron.cron.FailedRunsNotificationCronJob'
 
     def setUp(self):

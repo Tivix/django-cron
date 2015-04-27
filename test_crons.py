@@ -35,7 +35,7 @@ class TestRunAtTimesCronJob(CronJobBase):
         pass
 
 
-class Wiat3secCronJob(CronJobBase):
+class Wait3secCronJob(CronJobBase):
     code = 'test_wait_3_seconds'
     schedule = Schedule(run_every_mins=5)
 

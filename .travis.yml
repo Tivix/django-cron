@@ -5,6 +5,8 @@ python:
 env:
   - DJANGO=1.7.7
   - DJANGO=1.8
+addons:
+  - postgresql: "9.3"
 install:
   - pip install -q Django==$DJANGO --use-mirrors
   - pip install coveralls
@@ -14,4 +16,5 @@ script:
 after_success:
   - coveralls
 before_script:
-  - mysql -e 'create database djangocron;'
+  - mysql -e 'create database travis_test;'
+  - psql -c 'create database travis_test;' -U postgres
