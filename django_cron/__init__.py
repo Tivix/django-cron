@@ -54,6 +54,16 @@ class CronJobBase(object):
     def get_prev_success_cron(self):
         return self.prev_success_cron
 
+    @classmethod
+    def how_many_time_to_run(cls):
+        try:
+            last_job = CronJobLog.objects.filter(
+                code=cls.code).latest('start_time')
+        except CronJobLog.DoesNotExist:
+            return timedelta()
+        return (last_job.start_time +
+                timedelta(minutes=cls.schedule.run_every_mins) - timezone.now())
+
 
 class CronJobManager(object):
     """
