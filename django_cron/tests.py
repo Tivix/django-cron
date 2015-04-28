@@ -1,9 +1,9 @@
 import threading
 from time import sleep
+from datetime import timedelta
 
 from django import db
 from django.utils import unittest
-from django_cron.models import CronJobLog
 from django.core.management import call_command
 from django.test.utils import override_settings
 from django.test.client import Client
@@ -11,6 +11,9 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 
 from freezegun import freeze_time
+
+from django_cron.helpers import humanize_duration
+from django_cron.models import CronJobLog
 
 
 class TestCase(unittest.TestCase):
@@ -139,3 +142,17 @@ class TestCase(unittest.TestCase):
         call_command('runcrons', self.test_failed_runs_notification_cron)
 
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 11)
+
+    def test_humanize_duration(self):
+        test_subjects = (
+            (timedelta(days=1, hours=1, minutes=1, seconds=1), '1 day, 1 hour, 1 minute, 1 second'),
+            (timedelta(days=2), '2 days'),
+            (timedelta(days=15, minutes=4), '15 days, 4 minutes'),
+            (timedelta(), '< 1 second'),
+        )
+
+        for duration, humanized in test_subjects:
+            self.assertEqual(
+                humanize_duration(duration),
+                humanized
+            )
