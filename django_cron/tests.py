@@ -1,6 +1,7 @@
 import threading
 from time import sleep
 from datetime import timedelta
+import os
 
 from django import db
 from django.utils import unittest
@@ -16,6 +17,23 @@ from django_cron.helpers import humanize_duration
 from django_cron.models import CronJobLog
 
 
+class OutBuffer(object):
+    content = []
+    modified = False
+    _str_cache = ''
+
+    def write(self, *args):
+        self.content.extend(args)
+        self.modified = True
+
+    def str_content(self):
+        if self.modified:
+            self._str_cache = ''.join((str(x) for x in self.content))
+            self.modified = False
+
+        return self._str_cache
+
+
 class TestCase(unittest.TestCase):
 
     success_cron = 'test_crons.TestSucessCronJob'
@@ -23,6 +41,7 @@ class TestCase(unittest.TestCase):
     five_mins_cron = 'test_crons.Test5minsCronJob'
     run_at_times_cron = 'test_crons.TestRunAtTimesCronJob'
     wait_3sec_cron = 'test_crons.Wait3secCronJob'
+    does_not_exist_cron = 'ThisCronObviouslyDoesntExist'
     test_failed_runs_notification_cron = 'django_cron.cron.FailedRunsNotificationCronJob'
 
     def setUp(self):
@@ -37,6 +56,15 @@ class TestCase(unittest.TestCase):
         logs_count = CronJobLog.objects.all().count()
         call_command('runcrons', self.error_cron, force=True)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
+
+    def test_not_exists_cron(self):
+        logs_count = CronJobLog.objects.all().count()
+        out_buffer = OutBuffer()
+        call_command('runcrons', self.does_not_exist_cron, force=True, stdout=out_buffer)
+
+        self.assertIn('Make sure these are valid cron class names', out_buffer.str_content())
+        self.assertIn(self.does_not_exist_cron, out_buffer.str_content())
+        self.assertEqual(CronJobLog.objects.all().count(), logs_count)
 
     @override_settings(DJANGO_CRON_LOCK_BACKEND='django_cron.backends.lock.file.FileLock')
     def test_file_locking_backend(self):
