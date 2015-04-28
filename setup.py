@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# flake8: noqa
 
 try:
     from setuptools import setup, find_packages

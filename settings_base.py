@@ -24,8 +24,8 @@ CRON_CLASSES = [
 ]
 
 MIDDLEWARE_CLASSES = [
-     'django.contrib.sessions.middleware.SessionMiddleware',
-     'django.contrib.auth.middleware.AuthenticationMiddleware'
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware'
 ]
 
 LOGGING = {
