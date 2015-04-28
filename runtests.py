@@ -4,7 +4,7 @@ import os
 import sys
 
 if 'DJANGO_SETTINGS_MODULE' not in os.environ:
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'test_settings'
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'settings_sqllite'
 
 test_dir = os.path.dirname(__file__)
 sys.path.insert(0, test_dir)
