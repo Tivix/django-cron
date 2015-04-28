@@ -31,7 +31,7 @@ class Command(BaseCommand):
 
         try:
             crons_to_run = map(lambda x: get_class(x), cron_class_names)
-        except Exception:
+        except:
             error = traceback.format_exc()
             self.stdout.write('Make sure these are valid cron class names: %s\n%s' % (cron_class_names, error))
             return

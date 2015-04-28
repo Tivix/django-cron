@@ -9,9 +9,9 @@ def humanize_duration(duration):
     For example: 2 days 1 hour 25 minutes 10 seconds
     """
     days = duration.days
-    hours = duration.seconds / 3600
-    minutes = duration.seconds % 3600 / 60
-    seconds = duration.seconds % 3600 % 60
+    hours = int(duration.seconds / 3600)
+    minutes = int(duration.seconds % 3600 / 60)
+    seconds = int(duration.seconds % 3600 % 60)
 
     parts = []
     if days > 0:
