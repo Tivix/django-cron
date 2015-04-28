@@ -1,7 +1,6 @@
 import threading
 from time import sleep
 from datetime import timedelta
-import os
 
 from django import db
 from django.utils import unittest
