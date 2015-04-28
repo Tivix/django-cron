@@ -135,13 +135,13 @@ class CronJobManager(object):
     def make_log(self, *messages, **kwargs):
         cron_log = self.cron_log
 
-        cron_job      = getattr(self, 'cron_job', self.cron_job_class)
+        cron_job = getattr(self, 'cron_job', self.cron_job_class)
         cron_log.code = cron_job.code
 
-        cron_log.is_success  = kwargs.get('success', True)
-        cron_log.message     = self.make_log_msg(*messages)
+        cron_log.is_success = kwargs.get('success', True)
+        cron_log.message = self.make_log_msg(*messages)
         cron_log.ran_at_time = getattr(self, 'user_time', None)
-        cron_log.end_time    = timezone.now()
+        cron_log.end_time = timezone.now()
         cron_log.save()
 
     def make_log_msg(self, msg, *other_messages):
@@ -205,7 +205,6 @@ class CronJobManager(object):
             return get_class(name)
         except Exception as err:
             raise Exception("invalid lock module %s. Can't use it: %s." % (name, err))
-
 
     @property
     def msg(self):

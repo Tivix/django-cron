@@ -22,3 +22,4 @@ after_success:
 before_script:
   - mysql -e 'create database travis_test;'
   - psql -c 'create database travis_test;' -U postgres
+  - flake8 . --config=flake8

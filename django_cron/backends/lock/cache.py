@@ -18,16 +18,17 @@ except ImportError:
 
 class CacheLock(DjangoCronJobLock):
     """
-    One of simpliest lock backends, uses django cache to
+    One of simplest lock backends, uses django cache to
     prevent parallel runs of commands.
     """
     DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
+
     def __init__(self, cron_class, *args, **kwargs):
         super(CacheLock, self).__init__(cron_class, *args, **kwargs)
 
-        self.cache     = self.get_cache_by_name()
+        self.cache = self.get_cache_by_name()
         self.lock_name = self.get_lock_name()
-        self.timeout   = self.get_cache_timeout(cron_class)
+        self.timeout = self.get_cache_timeout(cron_class)
 
     def lock(self):
         """
@@ -45,17 +46,19 @@ class CacheLock(DjangoCronJobLock):
     def lock_failed_message(self):
         started = self.get_running_lock_date()
         msgs = [
-            "%s: lock has been found. Other cron started at %s" % \
-                (self.job_name, started),
-            "Current timeout for job %s is %s seconds (cache key name is '%s')." % \
-                (self.job_name, self.timeout, self.lock_name)
+            "%s: lock has been found. Other cron started at %s" % (
+                self.job_name, started
+            ),
+            "Current timeout for job %s is %s seconds (cache key name is '%s')." % (
+                self.job_name, self.timeout, self.lock_name
+            )
         ]
         return msgs
 
     def get_cache_by_name(self):
-        '''
+        """
         Gets a specified cache (or the `default` cache if CRON_CACHE is not set)
-        '''
+        """
         cache_name = 'default'
         if hasattr(settings, 'CRON_CACHE'):
             warnings.warn("CRON_CACHE config variable was renamed into DJANGO_CRON_CACHE.", DeprecationWarning)

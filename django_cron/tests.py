@@ -73,8 +73,11 @@ class TestCase(unittest.TestCase):
 
     def test_admin(self):
         password = 'test'
-        user = User.objects.create_superuser('test', 'test@tivix.com',
-            password)
+        user = User.objects.create_superuser(
+            'test',
+            'test@tivix.com',
+            password
+        )
         self.client = Client()
         self.client.login(username=user.username, password=password)
 

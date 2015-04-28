@@ -14,7 +14,6 @@ except ImportError:
 DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
 
 
-
 class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
         make_option('--force', action='store_true', help='Force cron runs'),
@@ -33,14 +32,17 @@ class Command(BaseCommand):
 
         try:
             crons_to_run = map(lambda x: get_class(x), cron_class_names)
-        except:
+        except Exception:
             error = traceback.format_exc()
             print('Make sure these are valid cron class names: %s\n%s' % (cron_class_names, error))
             sys.exit()
 
         for cron_class in crons_to_run:
-            run_cron_with_cache_check(cron_class, force=options['force'],
-                silent=options['silent'])
+            run_cron_with_cache_check(
+                cron_class,
+                force=options['force'],
+                silent=options['silent']
+            )
         close_connection()
 
 
@@ -55,4 +57,3 @@ def run_cron_with_cache_check(cron_class, force=False, silent=False):
 
     with CronJobManager(cron_class, silent) as manager:
         manager.run(force)
-
