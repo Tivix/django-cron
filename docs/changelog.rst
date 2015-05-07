@@ -4,7 +4,9 @@ Changelog
 0.4.1
 ------
 
-    - Added get_prev_success_cron method to schedule (issue #26)
+    - Added get_prev_success_cron method to Schedule (Issue #26)
+
+    - Improvements to Admin interface (PR #42)
 
 
 0.4.0
