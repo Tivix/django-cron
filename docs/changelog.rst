@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.4.1
+------
+
+    - Added get_prev_success_cron method to schedule (issue #26)
+
+
 0.4.0
 ------
 
