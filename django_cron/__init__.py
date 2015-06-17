@@ -5,7 +5,7 @@ import time
 
 from django_cron.models import CronJobLog
 from django.conf import settings
-from django.utils.timezone import now as utc_now, localtime
+from django.utils.timezone import now as utc_now, localtime, is_naive
 from django.db.models import Q
 
 
@@ -25,6 +25,11 @@ def get_class(kls):
     for comp in parts[1:]:
         m = getattr(m, comp)
     return m
+
+
+def get_current_time():
+    now = utc_now()
+    return now if is_naive(now) else localtime(now)
 
 
 class Schedule(object):
@@ -93,7 +98,7 @@ class CronJobManager(object):
                 pass
             if last_job:
                 if not last_job.is_success and cron_job.schedule.retry_after_failure_mins:
-                    if localtime(utc_now()) > last_job.start_time + timedelta(minutes=cron_job.schedule.retry_after_failure_mins):
+                    if get_current_time() > last_job.start_time + timedelta(minutes=cron_job.schedule.retry_after_failure_mins):
                         return True
                     else:
                         return False
@@ -108,7 +113,7 @@ class CronJobManager(object):
                 pass
 
             if self.previously_ran_successful_cron:
-                if localtime(utc_now()) > self.previously_ran_successful_cron.start_time + timedelta(minutes=cron_job.schedule.run_every_mins):
+                if get_current_time() > self.previously_ran_successful_cron.start_time + timedelta(minutes=cron_job.schedule.run_every_mins):
                     return True
             else:
                 return True
@@ -116,7 +121,7 @@ class CronJobManager(object):
         if cron_job.schedule.run_at_times:
             for time_data in cron_job.schedule.run_at_times:
                 user_time = time.strptime(time_data, "%H:%M")
-                now = localtime(utc_now())
+                now = get_current_time()
                 actual_time = time.strptime("%s:%s" % (now.hour, now.minute), "%H:%M")
                 if actual_time >= user_time:
                     qset = CronJobLog.objects.filter(
@@ -141,7 +146,7 @@ class CronJobManager(object):
         cron_log.is_success = kwargs.get('success', True)
         cron_log.message = self.make_log_msg(*messages)
         cron_log.ran_at_time = getattr(self, 'user_time', None)
-        cron_log.end_time = localtime(utc_now())
+        cron_log.end_time = get_current_time()
         cron_log.save()
 
     def make_log_msg(self, msg, *other_messages):
@@ -163,7 +168,7 @@ class CronJobManager(object):
                 return self.make_log_msg(msg)
 
     def __enter__(self):
-        self.cron_log = CronJobLog(start_time=localtime(utc_now()))
+        self.cron_log = CronJobLog(start_time=get_current_time())
 
         return self
 

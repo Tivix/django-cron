@@ -88,7 +88,6 @@ class TestCase(unittest.TestCase):
 
     def test_runs_at_time(self):
         logs_count = CronJobLog.objects.all().count()
-
         with freeze_time("2014-01-01 00:00:01"):
             call_command('runcrons', self.run_at_times_cron)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
@@ -110,9 +109,6 @@ class TestCase(unittest.TestCase):
         )
         self.client = Client()
         self.client.login(username=user.username, password=password)
-
-        # get list of CronJobLogs
-        url = reverse('admin:django_cron_cronjoblog_changelist')
 
         # edit CronJobLog object
         call_command('runcrons', self.success_cron, force=True)

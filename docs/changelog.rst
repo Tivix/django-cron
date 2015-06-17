@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.4.2
+------
+
+    - Fix for #57 (ignoring Django timezone settings)
+
+
 0.4.1
 ------
 
