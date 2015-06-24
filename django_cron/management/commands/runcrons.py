@@ -1,9 +1,11 @@
 from optparse import make_option
 import traceback
+from datetime import timedelta
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from django_cron import CronJobManager, get_class
+from django_cron import CronJobManager, get_class, get_current_time
+from django_cron.models import CronJobLog
 try:
     from django.db import close_old_connections as close_connection
 except ImportError:
@@ -31,7 +33,7 @@ class Command(BaseCommand):
 
         try:
             crons_to_run = [get_class(x) for x in cron_class_names]
-        except:
+        except Exception:
             error = traceback.format_exc()
             self.stdout.write('Make sure these are valid cron class names: %s\n%s' % (cron_class_names, error))
             return
@@ -42,6 +44,8 @@ class Command(BaseCommand):
                 force=options['force'],
                 silent=options['silent']
             )
+
+        clear_old_log_entries()
         close_connection()
 
 
@@ -56,3 +60,12 @@ def run_cron_with_cache_check(cron_class, force=False, silent=False):
 
     with CronJobManager(cron_class, silent) as manager:
         manager.run(force)
+
+
+def clear_old_log_entries():
+    """
+    Removes older log entries, if the appropriate setting has been set
+    """
+    if hasattr(settings, 'DJANGO_CRON_DELETE_LOGS_OLDER_THAN'):
+        delta = timedelta(days=settings.DJANGO_CRON_DELETE_LOGS_OLDER_THAN)
+        CronJobLog.objects.filter(end_time__lt=get_current_time()-delta).delete()

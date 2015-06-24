@@ -11,5 +11,7 @@ Configuration
 
 **DJANGO_CRON_CACHE** - cache name used in CacheLock backend, default: ``default``
 
+**DJANGO_CRON_DELETE_LOGS_OLDER_THAN** - integer, number of days after which log entries will be clear (optional - if not set no entries will be deleted)
+
 
 For more details, see :doc:`Sample Cron Configurations <sample_cron_configurations>` and :doc:`Locking backend <locking_backend>`
