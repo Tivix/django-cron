@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.4.3
+------
+
+    - Added DJANGO_CRON_DELETE_LOGS_OLDER_THAN setting to allow automated log clearing.
+
+
 0.4.2
 ------
 
