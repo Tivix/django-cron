@@ -68,4 +68,4 @@ def clear_old_log_entries():
     """
     if hasattr(settings, 'DJANGO_CRON_DELETE_LOGS_OLDER_THAN'):
         delta = timedelta(days=settings.DJANGO_CRON_DELETE_LOGS_OLDER_THAN)
-        CronJobLog.objects.filter(end_time__lt=get_current_time()-delta).delete()
+        CronJobLog.objects.filter(end_time__lt=get_current_time() - delta).delete()
