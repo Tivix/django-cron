@@ -14,7 +14,7 @@ Installation
 
 3. Run ``python manage.py migrate django_cron``
 
-4. Write a cron class somewhere in your code, that extends the `CronJobBase` class. This class will look something like this:
+4. Write a cron class somewhere in your code, that extends the ``CronJobBase`` class. This class will look something like this:
 
    .. code-block:: python
 
@@ -38,9 +38,7 @@ Installation
            # ...
        ]
 
-6. Now everytime you run the management command ``python manage.py runcrons`` all the crons will run if required. Depending on the application the management command can be called from the Unix crontab as often as required. Every 5 minutes usually works for most of my applications, for example:
-
-   .. code-block:: python
+6. Now everytime you run the management command ``python manage.py runcrons`` all the crons will run if required. Depending on the application the management command can be called from the Unix crontab as often as required. Every 5 minutes usually works for most of my applications, for example: ::
 
        > crontab -e
        */5 * * * * source /home/ubuntu/.bashrc && source /home/ubuntu/work/your-project/bin/activate && python /home/ubuntu/work/your-project/src/manage.py runcrons > /home/ubuntu/cronjob.log
