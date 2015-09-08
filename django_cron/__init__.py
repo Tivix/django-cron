@@ -55,7 +55,7 @@ class CronJobBase(object):
         return self.prev_success_cron
 
     @classmethod
-    def how_many_time_to_run(cls):
+    def get_time_until_run(cls):
         try:
             last_job = CronJobLog.objects.filter(
                 code=cls.code).latest('start_time')
