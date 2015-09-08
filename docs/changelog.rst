@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.4.4
+------
+
+    - Remove max_length from CronJobLog.message field.
+
+
 0.4.3
 ------
 
