@@ -1,5 +1,9 @@
 Changelog
 =========
+0.4.5
+------
+
+    - Added ability to check how many time left until next run.
 
 0.4.4
 ------
