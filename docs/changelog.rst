@@ -5,6 +5,32 @@ Changelog
 
     - Added ability to check how many time left until next run.
 
+0.4.4
+------
+
+    - Remove max_length from CronJobLog.message field.
+
+
+0.4.3
+------
+
+    - Added DJANGO_CRON_DELETE_LOGS_OLDER_THAN setting to allow automated log clearing.
+
+
+0.4.2
+------
+
+    - Fix for #57 (ignoring Django timezone settings)
+
+
+0.4.1
+------
+
+    - Added get_prev_success_cron method to Schedule (Issue #26)
+
+    - Improvements to Admin interface (PR #42)
+
+
 0.4.0
 ------
 

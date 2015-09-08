@@ -1,7 +1,7 @@
 Locking Backend
 ===============
 
-You can use one of two built-in locking backends by setting DJANGO_CRON_LOCK_BACKEND with one of:
+You can use one of two built-in locking backends by setting ``DJANGO_CRON_LOCK_BACKEND`` with one of:
 
     - ``django_cron.backends.lock.cache.CacheLock`` (default)
     - ``django_cron.backends.lock.file.FileLock``

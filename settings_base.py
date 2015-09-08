@@ -1,13 +1,3 @@
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'USER': 'travis',
-        'NAME': 'djangocron',
-        'TEST_NAME': 'djangocron_test',
-    }
-}
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -29,13 +19,13 @@ CRON_CLASSES = [
     'test_crons.TestErrorCronJob',
     'test_crons.Test5minsCronJob',
     'test_crons.TestRunAtTimesCronJob',
-    'test_crons.Wiat3secCronJob',
+    'test_crons.Wait3secCronJob',
     'django_cron.cron.FailedRunsNotificationCronJob'
 ]
 
 MIDDLEWARE_CLASSES = [
-     'django.contrib.sessions.middleware.SessionMiddleware',
-     'django.contrib.auth.middleware.AuthenticationMiddleware'
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware'
 ]
 
 LOGGING = {

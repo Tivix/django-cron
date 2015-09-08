@@ -3,8 +3,14 @@ python:
   - "2.7"
   - "3.4"
 env:
-  - DJANGO=1.7.7
-  - DJANGO=1.8
+  - DJANGO=1.7.7 DJANGO_SETTINGS_MODULE='settings_sqllite'
+  - DJANGO=1.8 DJANGO_SETTINGS_MODULE='settings_sqllite'
+  - DJANGO=1.7.7 DJANGO_SETTINGS_MODULE='settings_postgres'
+  - DJANGO=1.8 DJANGO_SETTINGS_MODULE='settings_postgres'
+  - DJANGO=1.7.7 DJANGO_SETTINGS_MODULE='settings_mysql'
+  - DJANGO=1.8 DJANGO_SETTINGS_MODULE='settings_mysql'
+addons:
+  - postgresql: "9.3"
 install:
   - pip install -q Django==$DJANGO --use-mirrors
   - pip install coveralls
@@ -14,4 +20,6 @@ script:
 after_success:
   - coveralls
 before_script:
-  - mysql -e 'create database djangocron;'
+  - mysql -e 'create database travis_test;'
+  - psql -c 'create database travis_test;' -U postgres
+  - flake8 . --config=flake8

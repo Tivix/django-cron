@@ -4,9 +4,9 @@ Sample Cron Configurations
 Retry after failure feature
 ---------------------------
 
-You can run cron by passing RETRY_AFTER_FAILURE_MINS param.
+You can run cron by passing ``RETRY_AFTER_FAILURE_MINS`` param.
 
-This will re-runs not next time runcrons is run, but at least RETRY_AFTER_FAILURE_MINS after last failure:
+This will re-runs not next time runcrons is run, but at least ``RETRY_AFTER_FAILURE_MINS`` after last failure:
 
 .. code-block:: python
 
@@ -20,7 +20,7 @@ This will re-runs not next time runcrons is run, but at least RETRY_AFTER_FAILUR
 Run at times feature
 --------------------
 
-You can run cron by passing RUN_EVERY_MINS or RUN_AT_TIMES params.
+You can run cron by passing ``RUN_EVERY_MINS`` or ``RUN_AT_TIMES`` params.
 
 This will run job every hour:
 
@@ -81,25 +81,26 @@ FailedRunsNotificationCronJob
 
 This example cron check last cron jobs results. If they were unsuccessfull 10 times in row, it sends email to user.
 
-Install required dependencies: 'Django>=1.5.0', 'South>=0.7.2', 'django-common>=0.5.1'.
+Install required dependencies: ``Django>=1.7.0``, ``django-common>=0.5.1``.
 
-Add 'django_cron.cron.FailedRunsNotificationCronJob' to your CRON_CLASSES in settings file.
+Add ``django_cron.cron.FailedRunsNotificationCronJob`` to your ``CRON_CLASSES`` in settings file.
 
-To set up minimal number of failed runs set up MIN_NUM_FAILURES in your cron class (default = 10). For example:
+To set up minimal number of failed runs set up ``MIN_NUM_FAILURES`` in your cron class (default = 10). For example: ::
 
-class MyCronJob(CronJobBase):
-    RUN_EVERY_MINS = 10
-    MIN_NUM_FAILURES = 3
+    class MyCronJob(CronJobBase):
+        RUN_EVERY_MINS = 10
+        MIN_NUM_FAILURES = 3
 
-    schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
-    code = 'app.MyCronJob'
+        schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
+        code = 'app.MyCronJob'
 
-    def do(self):
-        ... some action here ...
-Emails are imported from ADMINS in settings file
+        def do(self):
+            ... some action here ...
 
-To set up email prefix, you must add FAILED_RUNS_CRONJOB_EMAIL_PREFIX in your settings file (default is empty). For example:
+Emails are imported from ``ADMINS`` in settings file
 
-FAILED_RUNS_CRONJOB_EMAIL_PREFIX = "[Server check]: "
-FailedRunsNotificationCronJob checks every cron from CRON_CLASSES
+To set up email prefix, you must add ``AILED_RUNS_CRONJOB_EMAIL_PREFIX`` in your settings file (default is empty). For example: ::
 
+    FAILED_RUNS_CRONJOB_EMAIL_PREFIX = "[Server check]: "
+
+``FailedRunsNotificationCronJob`` checks every cron from ``CRON_CLASSES``
