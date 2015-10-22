@@ -67,7 +67,7 @@ class CronJobBase(object):
         except CronJobLog.DoesNotExist:
             return timedelta()
         return (last_job.start_time +
-                timedelta(minutes=cls.schedule.run_every_mins) - timezone.now())
+                timedelta(minutes=cls.schedule.run_every_mins) - utc_now())
 
 
 class CronJobManager(object):
