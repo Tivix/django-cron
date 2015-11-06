@@ -40,7 +40,9 @@ This will run job at given hours:
 
         schedule = Schedule(run_at_times=RUN_AT_TIMES)
 
-Hour format is HH:MM (24h clock)
+Hour format is ``HH:MM`` (24h clock). ``django-cron`` will interpret
+these times in the local timezone of your site, as specified by
+the ``TIME_ZONE`` setting.
 
 You can also mix up both of these methods:
 
