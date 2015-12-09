@@ -3,7 +3,7 @@ from time import sleep
 from datetime import timedelta
 
 from django import db
-from django.utils import unittest
+from django.test import TestCase as BaseTestCase
 from django.core.management import call_command
 from django.test.utils import override_settings
 from django.test.client import Client
@@ -33,7 +33,7 @@ class OutBuffer(object):
         return self._str_cache
 
 
-class TestCase(unittest.TestCase):
+class TestCase(BaseTestCase):
 
     success_cron = 'test_crons.TestSucessCronJob'
     error_cron = 'test_crons.TestErrorCronJob'
