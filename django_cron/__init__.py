@@ -60,6 +60,7 @@ class CronJobBase(object):
 
     @classmethod
     def get_time_until_run(cls):
+        from django_cron.models import CronJobLog
         try:
             last_job = CronJobLog.objects.filter(
                 code=cls.code).latest('start_time')
