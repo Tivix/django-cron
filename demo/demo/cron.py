@@ -16,7 +16,7 @@ class EmailUsercountCronJob(CronJobBase):
 
     def do(self):
         message = 'Active users: %d' % User.objects.count()
-        print message
+        print(message)
         send_mail(
             '[django-cron demo] Active user count',
             message,
