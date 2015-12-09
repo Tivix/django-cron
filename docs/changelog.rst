@@ -1,5 +1,11 @@
 Changelog
 =========
+0.4.6
+------
+
+    - Model import error fix for Django 1.9.X
+
+
 0.4.5
 ------
 
