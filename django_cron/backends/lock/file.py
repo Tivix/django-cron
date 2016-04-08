@@ -9,22 +9,21 @@ class FileLock(DjangoCronJobLock):
     """
     Quite a simple lock backend that uses kernel based locking
     """
+    __lock_fd = None
 
     def lock(self):
         lock_name = self.get_lock_name()
         try:
-            f = open(lock_name, 'w+', 0)
-            locks.lock(f, locks.LOCK_EX | locks.LOCK_NB)
+            self.__lock_fd = open(lock_name, 'w+', 0)
+            locks.lock(self.__lock_fd, locks.LOCK_EX | locks.LOCK_NB)
         except IOError:
             return False
         return True
         # TODO: perhaps on windows I need to catch different exception type
 
     def release(self):
-        lock_name = self.get_lock_name()
-        f = open(lock_name, 'w+', 0)
-        locks.lock(f, locks.LOCK_UN)
-        f.close()
+        locks.lock(self.__lock_fd, locks.LOCK_UN)
+        self.__lock_fd.close()
 
     def get_lock_name(self):
         default_path = '/tmp'
