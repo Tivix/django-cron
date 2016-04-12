@@ -16,10 +16,11 @@ DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
 
 
 class Command(BaseCommand):
-    option_list = BaseCommand.option_list + (
-        make_option('--force', action='store_true', help='Force cron runs'),
-        make_option('--silent', action='store_true', help='Do not push any message on console'),
-    )
+
+    def add_arguments(self, parser):
+        super().add_arguments(parser)
+        parser.add_argument('--force', action='store_true', help='Force cron runs')
+        parser.add_argument('--silent', action='store_true', help='Do not push any message on console')
 
     def handle(self, *args, **options):
         """
@@ -36,7 +37,7 @@ class Command(BaseCommand):
         except Exception:
             error = traceback.format_exc()
             self.stdout.write('Make sure these are valid cron class names: %s\n%s' % (cron_class_names, error))
-            return
+            raise
 
         for cron_class in crons_to_run:
             run_cron_with_cache_check(
