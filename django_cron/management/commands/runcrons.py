@@ -16,10 +16,9 @@ DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
 
 
 class Command(BaseCommand):
-    option_list = BaseCommand.option_list + (
-        make_option('--force', action='store_true', help='Force cron runs'),
-        make_option('--silent', action='store_true', help='Do not push any message on console'),
-    )
+    def add_arguments(self, parser):
+        parser.add_argument('--force', action='store_true', help='Force cron runs')
+        parser.add_argument('--silent', action='store_true', help='Do not push any message on console')
 
     def handle(self, *args, **options):
         """
