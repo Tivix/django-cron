@@ -29,7 +29,7 @@ setup(
     keywords='django cron',
     zip_safe=False,
     install_requires=[
-        'Django>=1.7.0',
+        'Django>=1.8.0',
         'django-common-helpers>=0.6.4'
     ],
     test_suite='runtests.runtests',
