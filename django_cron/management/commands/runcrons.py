@@ -17,6 +17,10 @@ DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
+            'cron_classes',
+            nargs='*',
+        )
+        parser.add_argument(
             '--force',
             action='store_true',
             help='Force cron runs'
@@ -32,8 +36,9 @@ class Command(BaseCommand):
         Iterates over all the CRON_CLASSES (or if passed in as a commandline argument)
         and runs them.
         """
-        if args:
-            cron_class_names = args
+        cron_classes = options['cron_classes']
+        if cron_classes:
+            cron_class_names = cron_classes
         else:
             cron_class_names = getattr(settings, 'CRON_CLASSES', [])
 
