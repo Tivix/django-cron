@@ -18,7 +18,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             'cron_classes',
-            nargs='*',
+            nargs='*'
         )
         parser.add_argument(
             '--force',
