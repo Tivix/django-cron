@@ -53,6 +53,15 @@ CACHES = {
     }
 }
 
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {},
+    },
+]
+
 ROOT_URLCONF = 'test_urls'
 SITE_ID = 1
 STATIC_URL = '/static/'

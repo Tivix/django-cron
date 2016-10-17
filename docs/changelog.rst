@@ -1,5 +1,15 @@
 Changelog
 =========
+0.5.0
+------
+
+    - Added support for Django 1.10
+
+    - Minimum Django version required is 1.8
+
+    - Use parser.add_argument() instead of optparse.make_option() in runcrons command
+
+
 0.4.6
 ------
 
