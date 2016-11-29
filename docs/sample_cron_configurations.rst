@@ -59,7 +59,7 @@ This will run job every 2h plus one run at 6:30.
 Allowing parallels runs
 -----------------------
 
-By deafult parallels runs are not allowed (for security reasons). However if you
+By default parallels runs are not allowed (for security reasons). However if you
 want enable them just add:
 
 .. code-block:: python
@@ -81,14 +81,30 @@ If you wish to override which cache is used, put this in your settings file:
 FailedRunsNotificationCronJob
 -----------------------------
 
-This example cron check last cron jobs results. If they were unsuccessfull 10 times in row, it sends email to user.
+This sample cron job checks for any unreported failed jobs for each job class
+provided in your ``CRON_CLASSES`` list, and reports them as necessary. The job
+is set to run on each ``runcrons`` task, and the default process is to email
+all the users specified in the ``ADMINS`` settings list when a job fails more
+than 10 times in a row.
 
 Install required dependencies: ``Django>=1.7.0``, ``django-common>=0.5.1``.
 
-Add ``django_cron.cron.FailedRunsNotificationCronJob`` to your ``CRON_CLASSES`` in settings file.
+Add ``django_cron.cron.FailedRunsNotificationCronJob`` to *the end* of your
+``CRON_CLASSES`` list within your settings file. ::
 
-To set up minimal number of failed runs set up ``MIN_NUM_FAILURES`` in your cron class (default = 10). For example: ::
+    CRON_CLASSES = [
+        ...
+        'django_cron.cron.FailedRunsNotificationCronJob'
+    ]
 
+To configure the minimum number of failures before a report, you can either
+provide a global using the setting ``CRON_MIN_NUM_FAILURES``, or add
+a ``MIN_NUM_FAILURES`` attribute to your cron class. For example: ::
+
+    # In your settings module
+    CRON_MIN_NUM_FAILURES = 5
+
+    # Or in your cron module
     class MyCronJob(CronJobBase):
         RUN_EVERY_MINS = 10
         MIN_NUM_FAILURES = 3
@@ -99,10 +115,25 @@ To set up minimal number of failed runs set up ``MIN_NUM_FAILURES`` in your cron
         def do(self):
             ... some action here ...
 
-Emails are imported from ``ADMINS`` in settings file
+You can configure the email sender and recipients by providing the
+``CRON_FAILURE_FROM_EMAIL`` and ``CRON_FAILURE_EMAIL_RECIPIENTS`` settings
+respectively. ::
 
-To set up email prefix, you must add ``AILED_RUNS_CRONJOB_EMAIL_PREFIX`` in your settings file (default is empty). For example: ::
+    CRON_FAILURE_FROM_EMAIL = 'cronreport@me.com'
+    CRON_FAILURE_EMAIL_RECIPIENTS = ['foo@bar.com', 'x@y.com']
+
+You can specify a custom email prefix by providing the ``FAILED_RUNS_CRONJOB_EMAIL_PREFIX``
+setting. For example: ::
 
     FAILED_RUNS_CRONJOB_EMAIL_PREFIX = "[Server check]: "
 
-``FailedRunsNotificationCronJob`` checks every cron from ``CRON_CLASSES``
+Finally, you can subclass ``FailedRunsNotificationCronJob`` and define a custom
+``report_failure()`` method if you'd like to report a failure in a different
+way (e.g. via slack, text etc.). For example: ::
+
+    class FailedNotifier(FailedRunsNotificationCronJob):
+        def report_failure(self, cron_cls, failed_jobs):
+            """
+            Report in Slack that the given Cron job failed.
+            """
+            slack.post("ERROR - Cron job '{0}' failed.".format(cron_cls.code))
