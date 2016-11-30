@@ -101,7 +101,7 @@ To set up minimal number of failed runs set up ``MIN_NUM_FAILURES`` in your cron
 
 Emails are imported from ``ADMINS`` in settings file
 
-To set up email prefix, you must add ``AILED_RUNS_CRONJOB_EMAIL_PREFIX`` in your settings file (default is empty). For example: ::
+To set up email prefix, you must add ``FAILED_RUNS_CRONJOB_EMAIL_PREFIX`` in your settings file (default is empty). For example: ::
 
     FAILED_RUNS_CRONJOB_EMAIL_PREFIX = "[Server check]: "
 
