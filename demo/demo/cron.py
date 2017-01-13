@@ -9,7 +9,7 @@ class EmailUsercountCronJob(CronJobBase):
     """
     Send an email with the user count.
     """
-    RUN_EVERY_MINS = 0 if settings.DEBUG else 360   # 6 hours when not DEBUG
+    RUN_EVERY_MINS = 1 if settings.DEBUG else 360   # 6 hours when not DEBUG
 
     schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
     code = 'cron.EmailUsercountCronJob'
