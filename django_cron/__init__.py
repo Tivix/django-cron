@@ -193,6 +193,11 @@ class CronJobManager(object):
             try:
                 trace = "".join(traceback.format_exception(ex_type, ex_value, ex_traceback))
                 self.make_log(self.msg, trace, success=False)
+                logger.warning("Failed cron job: %s", self.cron_job.code, extra={
+                    'stacktrace': trace,
+                    'cron_job_class': self.cron_job_class,
+                    'cron_message': self.msg,
+                })
             except Exception as e:
                 err_msg = "Error saving cronjob log message: %s" % e
                 logger.error(err_msg)
