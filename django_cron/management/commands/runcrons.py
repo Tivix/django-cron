@@ -1,7 +1,7 @@
 import traceback
 from datetime import timedelta
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from django_cron import CronJobManager, get_class, get_current_time
 from django_cron.models import CronJobLog
@@ -46,8 +46,7 @@ class Command(BaseCommand):
             crons_to_run = [get_class(x) for x in cron_class_names]
         except Exception:
             error = traceback.format_exc()
-            self.stdout.write('Make sure these are valid cron class names: %s\n%s' % (cron_class_names, error))
-            return
+            raise CommandError('Make sure these are valid cron class names: %s\n%s' % (cron_class_names, error))
 
         for cron_class in crons_to_run:
             run_cron_with_cache_check(
