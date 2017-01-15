@@ -59,7 +59,7 @@ This will run job every 2h plus one run at 6:30.
 Allowing parallels runs
 -----------------------
 
-By default parallels runs are not allowed (for security reasons). However if you
+By default parallel runs are not allowed (for security reasons). However if you
 want enable them just add:
 
 .. code-block:: python
@@ -90,46 +90,55 @@ than 10 times in a row.
 Install required dependencies: ``Django>=1.7.0``, ``django-common>=0.5.1``.
 
 Add ``django_cron.cron.FailedRunsNotificationCronJob`` to *the end* of your
-``CRON_CLASSES`` list within your settings file. ::
+``CRON_CLASSES`` list within your settings file.
+
+.. code-block:: python
 
     CRON_CLASSES = [
         ...
         'django_cron.cron.FailedRunsNotificationCronJob'
     ]
 
-To configure the minimum number of failures before a report, you can either
-provide a global using the setting ``CRON_MIN_NUM_FAILURES``, or add
-a ``MIN_NUM_FAILURES`` attribute to your cron class. For example: ::
+Each cron job can specify the minimum number of failures required before an email is sent by setting a ``MIN_NUM_FAILURES`` attribute: ::
 
-    # In your settings module
-    CRON_MIN_NUM_FAILURES = 5
-
-    # Or in your cron module
     class MyCronJob(CronJobBase):
-        RUN_EVERY_MINS = 10
         MIN_NUM_FAILURES = 3
+        ...
 
-        schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
-        code = 'app.MyCronJob'
+**Configuration**
 
-        def do(self):
-            ... some action here ...
+By adding a ``CRON_FAILURE_REPORT`` dictionary to your Django settings you can configure the reporter in a variety of ways:
 
-You can configure the email sender and recipients by providing the
-``CRON_FAILURE_FROM_EMAIL`` and ``CRON_FAILURE_EMAIL_RECIPIENTS`` settings
-respectively. ::
+.. code-block:: python
 
-    CRON_FAILURE_FROM_EMAIL = 'cronreport@me.com'
-    CRON_FAILURE_EMAIL_RECIPIENTS = ['foo@bar.com', 'x@y.com']
+    # settings.py
+    CRON_FAILURE_REPORT = dict()
 
-You can specify a custom email prefix by providing the ``FAILED_RUNS_CRONJOB_EMAIL_PREFIX``
-setting. For example: ::
+The possible options are:
 
-    FAILED_RUNS_CRONJOB_EMAIL_PREFIX = "[Server check]: "
+* ``RUN_EVERY_MINS (int)``
 
-Finally, you can subclass ``FailedRunsNotificationCronJob`` and define a custom
-``report_failure()`` method if you'd like to report a failure in a different
-way (e.g. via slack, text etc.). For example: ::
+  After how many minutes should the reporter run (default: 0).
+
+* ``EMAIL_PREFIX (str)``
+
+  The prefix for all failure emails (default: "[Cron Failure] - ").
+
+* ``MIN_NUM_FAILURES (int)``
+
+  The default number of times an individual cron job can fail before an email is sent.
+  Job classes can always override this value by setting a class attribute
+  with the same name (default: 10).
+
+* ``FROM_EMAIL (str)``
+
+  The email address the fail reports are sent from (default: settings.DEFAULT_FROM_EMAIL)
+
+* ``EMAIL_RECIPIENTS (list<str>)``
+
+  A list of email addresses controlling who the reports are sent to (default: email addresses defined in settings.ADMIN)
+
+For more advanced usage, you can subclass ``FailedRunsNotificationCronJob``, and define a custom ``report_failure()`` method to be notified of failures in whichever way you like (e.g. via slack, text etc.). For example: ::
 
     class FailedNotifier(FailedRunsNotificationCronJob):
         def report_failure(self, cron_cls, failed_jobs):

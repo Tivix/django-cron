@@ -10,47 +10,53 @@ class FailedRunsNotificationCronJob(CronJobBase):
     A regular job to send email reports for failed Cron jobs.
 
     The job log is used to check for all unreported failures for each job
-    classes specified within the CRON_CLASSES dictionary. When the number of
+    class specified within the CRON_CLASSES dictionary. When the number of
     failures for each job type exceeds the limit (which can be specified
     either per-job or project wide) an email is sent to all relevant parties
     detailing the error.
     """
-    RUN_EVERY_MINS = 0
-
-    schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
     code = 'django_cron.FailedRunsNotificationCronJob'
 
-    def do(self):
+    def __init__(self, *args, **kwargs):
+        super(FailedRunsNotificationCronJob, self).__init__(*args, **kwargs)
         self.config = self.get_config()
-        cron_classes = [get_class(c_name) for c_name in settings.CRON_CLASSES]
-        cron_classes = [c for c in cron_classes if not isinstance(self, c)]
+        self.schedule = Schedule(run_every_mins=self.config['RUN_EVERY_MINS'])
 
-        for cron_cls in cron_classes:
-            self.check_for_failures(cron_cls)
+    def do(self):
+        """
+        Check all Cron jobs defined in CRON_CLASSES for failed runs.
+        """
+        cron_classes = [
+            get_class(class_name) for class_name in settings.CRON_CLASSES
+        ]
+
+        for cron_class in cron_classes:
+            # The FailedRuns Cron job should ignore itself
+            if isinstance(self, cron_class):
+                continue
+
+            self.check_for_failures(cron_class)
 
     def get_config(self):
         """
         Combine the default configuration with any project-specific ones.
         """
-        defaults = dict(
-            FAILED_RUNS_CRONJOB_EMAIL_PREFIX='[Cron Failure] - ',
-            CRON_MIN_NUM_FAILURES=10,
-            CRON_FAILURE_FROM_EMAIL=settings.DEFAULT_FROM_EMAIL,
-            CRON_FAILURE_EMAIL_RECIPIENTS=[
-                email for _, email in settings.ADMINS
-            ]
+        config = dict(
+            RUN_EVERY_MINS=0,
+            EMAIL_PREFIX='[Cron Failure] - ',
+            MIN_NUM_FAILURES=10,
+            FROM_EMAIL=settings.DEFAULT_FROM_EMAIL,
+            EMAIL_RECIPIENTS=[email for _, email in settings.ADMINS]
         )
-        return {
-            key: getattr(settings, key, defaults[key])
-            for key in defaults
-        }
+        config.update(getattr(settings, 'CRON_FAILURE_REPORT', {}))
+        return config
 
     def check_for_failures(self, cron_cls):
         """
         Check the given Cron task for failed jobs, and report if required.
         """
         min_failures = getattr(
-            cron_cls, 'MIN_NUM_FAILURES', self.config['CRON_MIN_NUM_FAILURES']
+            cron_cls, 'MIN_NUM_FAILURES', self.config['MIN_NUM_FAILURES']
         )
 
         failed_jobs = CronJobLog.objects.filter(
@@ -83,8 +89,9 @@ class FailedRunsNotificationCronJob(CronJobBase):
 
         divider = "\n\n{0}\n\n".format("=" * 80)
         message = divider.join(failed_reports)
+
         subject = "{prefix}{code} failed".format(
-            prefix=self.config['FAILED_RUNS_CRONJOB_EMAIL_PREFIX'],
+            prefix=self.config['EMAIL_PREFIX'],
             code=cron_cls.code
         )
 
@@ -95,6 +102,6 @@ class FailedRunsNotificationCronJob(CronJobBase):
 
         return dict(
             subject=subject, message=message,
-            from_email=self.config['CRON_FAILURE_FROM_EMAIL'],
-            recipient_emails=self.config['CRON_FAILURE_EMAIL_RECIPIENTS']
+            from_email=self.config['FROM_EMAIL'],
+            recipient_emails=self.config['EMAIL_RECIPIENTS']
         )
