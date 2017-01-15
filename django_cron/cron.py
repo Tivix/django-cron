@@ -7,48 +7,101 @@ from django_common.helper import send_mail
 
 class FailedRunsNotificationCronJob(CronJobBase):
     """
-        Send email if cron failed to run X times in a row
-    """
-    RUN_EVERY_MINS = 30
+    A regular job to send email reports for failed Cron jobs.
 
-    schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
+    The job log is used to check for all unreported failures for each job
+    class specified within the CRON_CLASSES dictionary. When the number of
+    failures for each job type exceeds the limit (which can be specified
+    either per-job or project wide) an email is sent to all relevant parties
+    detailing the error.
+    """
     code = 'django_cron.FailedRunsNotificationCronJob'
 
+    def __init__(self, *args, **kwargs):
+        super(FailedRunsNotificationCronJob, self).__init__(*args, **kwargs)
+        self.config = self.get_config()
+        self.schedule = Schedule(run_every_mins=self.config['RUN_EVERY_MINS'])
+
     def do(self):
+        """
+        Check all Cron jobs defined in CRON_CLASSES for failed runs.
+        """
+        cron_classes = [
+            get_class(class_name) for class_name in settings.CRON_CLASSES
+        ]
 
-        CRONS_TO_CHECK = map(lambda x: get_class(x), settings.CRON_CLASSES)
-        EMAILS = [admin[1] for admin in settings.ADMINS]
+        for cron_class in cron_classes:
+            # The FailedRuns Cron job should ignore itself
+            if isinstance(self, cron_class):
+                continue
 
-        try:
-            FAILED_RUNS_CRONJOB_EMAIL_PREFIX = settings.FAILED_RUNS_CRONJOB_EMAIL_PREFIX
-        except:
-            FAILED_RUNS_CRONJOB_EMAIL_PREFIX = ''
+            self.check_for_failures(cron_class)
 
-        for cron in CRONS_TO_CHECK:
+    def get_config(self):
+        """
+        Combine the default configuration with any project-specific ones.
+        """
+        config = dict(
+            RUN_EVERY_MINS=0,
+            EMAIL_PREFIX='[Cron Failure] - ',
+            MIN_NUM_FAILURES=10,
+            FROM_EMAIL=settings.DEFAULT_FROM_EMAIL,
+            EMAIL_RECIPIENTS=[email for _, email in settings.ADMINS]
+        )
+        config.update(getattr(settings, 'CRON_FAILURE_REPORT', {}))
+        return config
 
-            try:
-                min_failures = cron.MIN_NUM_FAILURES
-            except AttributeError:
-                min_failures = 10
+    def check_for_failures(self, cron_cls):
+        """
+        Check the given Cron task for failed jobs, and report if required.
+        """
+        min_failures = getattr(
+            cron_cls, 'MIN_NUM_FAILURES', self.config['MIN_NUM_FAILURES']
+        )
 
-            failures = 0
+        failed_jobs = CronJobLog.objects.filter(
+            code=cron_cls.code, is_success=False, failure_reported=False
+        )
 
-            jobs = CronJobLog.objects.filter(code=cron.code).order_by('-end_time')[:min_failures]
+        if failed_jobs.count() < min_failures:
+            return
 
-            message = ''
+        self.report_failure(cron_cls, failed_jobs)
+        failed_jobs.update(failure_reported=True)
 
-            for job in jobs:
-                if not job.is_success:
-                    failures += 1
-                    message += 'Job ran at %s : \n\n %s \n\n' % (job.start_time, job.message)
+    def report_failure(self, cron_cls, failed_jobs):
+        """
+        Report the failed jobs by sending an email (using django-common).
+        """
+        send_mail(**self.get_send_mail_kwargs(cron_cls, failed_jobs))
 
-            if failures == min_failures:
-                send_mail(
-                    '%s%s failed %s times in a row!' % (
-                        FAILED_RUNS_CRONJOB_EMAIL_PREFIX,
-                        cron.code,
-                        min_failures
-                    ),
-                    message,
-                    settings.DEFAULT_FROM_EMAIL, EMAILS
-                )
+    def get_send_mail_kwargs(self, cron_cls, failed_jobs):
+        """
+        Return the arguments to pass to send_mail for the given failed jobs.
+        """
+        failed_reports = []
+
+        for job in failed_jobs:
+            failed_reports.append(
+                u"Job ran at {start_time}:\n{message}"
+                .format(start_time=job.start_time, message=job.message)
+            )
+
+        divider = "\n\n{0}\n\n".format("=" * 80)
+        message = divider.join(failed_reports)
+
+        subject = "{prefix}{code} failed".format(
+            prefix=self.config['EMAIL_PREFIX'],
+            code=cron_cls.code
+        )
+
+        if len(failed_reports) > 1:
+            subject = "{subject} {times} times".format(
+                subject=subject, times=len(failed_reports)
+            )
+
+        return dict(
+            subject=subject, message=message,
+            from_email=self.config['FROM_EMAIL'],
+            recipient_emails=self.config['EMAIL_RECIPIENTS']
+        )
