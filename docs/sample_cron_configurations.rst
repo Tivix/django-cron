@@ -59,7 +59,7 @@ This will run job every 2h plus one run at 6:30.
 Allowing parallels runs
 -----------------------
 
-By deafult parallels runs are not allowed (for security reasons). However if you
+By default parallels runs are not allowed (for security reasons). However if you
 want enable them just add:
 
 .. code-block:: python
