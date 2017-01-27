@@ -27,8 +27,17 @@ def get_class(kls):
 
 
 def get_current_time():
+    """
+    Gets current time in UTC and coverts to local time, or if nothing set in django, gives back UTC. 
+    """
     now = utc_now()
-    return now if is_naive(now) else localtime(now)
+    # Try local time
+    try:
+        local = localtime(now)
+        return local
+    # If not available, just return utc
+    except:
+        return now 
 
 
 class Schedule(object):
