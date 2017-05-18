@@ -4,7 +4,7 @@ import traceback
 import time
 
 from django.conf import settings
-from django.utils.timezone import now as utc_now, localtime, is_naive
+from django.utils.timezone import now as utc_now, localtime
 from django.db.models import Q
 
 
@@ -28,7 +28,7 @@ def get_class(kls):
 
 def get_current_time():
     """
-    Gets current time in UTC and coverts to local time, or if nothing set in django, gives back UTC. 
+    Gets current time in UTC and coverts to local time, or if nothing set in django, gives back UTC.
     """
     now = utc_now()
     # Try local time
@@ -37,7 +37,7 @@ def get_current_time():
         return local
     # If not available, just return utc
     except:
-        return now 
+        return now
 
 
 class Schedule(object):

@@ -8,7 +8,7 @@ from freezegun import freeze_time
 from django import db
 from django.conf import settings
 from django.test import TransactionTestCase
-from django.core.management import call_command, CommandError
+from django.core.management import call_command
 from django.test.utils import override_settings
 from django.test.client import Client
 from django.core.urlresolvers import reverse
@@ -28,6 +28,7 @@ RUN_AT_TIMES_CRON = 'test_crons.TestRunAtTimesCronJob'
 WAIT_3SEC_CRON = 'test_crons.Wait3secCronJob'
 DOES_NOT_EXIST_CRON = 'ThisCronObviouslyDoesntExist'
 FAILED_RUNS_CRON = 'django_cron.cron.FailedRunsNotificationCronJob'
+
 
 class OutBuffer(object):
     content = []
