@@ -190,6 +190,8 @@ class CronJobManager(object):
                 logger.info(ex_value)
 
         elif ex_type is not None:
+            if not self.silent:
+                logger.exception("Error executing cron job")
             try:
                 trace = "".join(traceback.format_exception(ex_type, ex_value, ex_traceback))
                 self.make_log(self.msg, trace, success=False)
