@@ -50,7 +50,6 @@ class CronJobLogAdmin(admin.ModelAdmin):
         return humanize_duration(obj.end_time - obj.start_time)
 
     humanize_duration.short_description = _("Duration")
-    humanize_duration.admin_order_field = 'duration'
 
 
 admin.site.register(CronJobLog, CronJobLogAdmin)
