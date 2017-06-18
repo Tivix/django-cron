@@ -1,5 +1,5 @@
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 import traceback
 import time
 
@@ -32,12 +32,13 @@ def get_current_time():
 
 
 class Schedule(object):
-    def __init__(self, run_every_mins=None, run_at_times=None, retry_after_failure_mins=None):
+    def __init__(self, run_every_mins=None, run_at_times=None, retry_after_failure_mins=None, run_on_days=None):
         if run_at_times is None:
             run_at_times = []
         self.run_every_mins = run_every_mins
         self.run_at_times = run_at_times
         self.retry_after_failure_mins = retry_after_failure_mins
+        self.run_on_days = run_on_days
 
 
 class CronJobBase(object):
@@ -99,6 +100,11 @@ class CronJobManager(object):
         # If we pass --force options, we force cron run
         if force:
             return True
+
+        if cron_job.schedule.run_on_days is not None:
+            if not datetime.today().weekday() in cron_job.schedule.run_on_days:
+                return False
+
         if cron_job.schedule.run_every_mins is not None:
 
             # We check last job - success or not

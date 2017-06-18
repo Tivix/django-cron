@@ -41,6 +41,7 @@ class TestCase(TransactionTestCase):
     five_mins_cron = 'test_crons.Test5minsCronJob'
     run_at_times_cron = 'test_crons.TestRunAtTimesCronJob'
     wait_3sec_cron = 'test_crons.Wait3secCronJob'
+    run_on_wkend_cron = 'test_crons.RunOnWeekendCronJob'
     does_not_exist_cron = 'ThisCronObviouslyDoesntExist'
     test_failed_runs_notification_cron = 'django_cron.cron.FailedRunsNotificationCronJob'
 
@@ -100,6 +101,19 @@ class TestCase(TransactionTestCase):
         with freeze_time("2014-01-01 00:05:01"):
             call_command('runcrons', self.run_at_times_cron)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 2)
+
+    def test_run_on_weekend(self):
+        for test_date in ("2017-06-17", "2017-06-18"): # Saturday and Sunday
+            logs_count = CronJobLog.objects.all().count()
+            with freeze_time(test_date):
+                call_command('runcrons', self.run_on_wkend_cron)
+            self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
+
+        for test_date in ("2017-06-19", "2017-06-20", "2017-06-21", "2017-06-22", "2017-06-23"): # Mon-Fri
+            logs_count = CronJobLog.objects.all().count()
+            with freeze_time(test_date):
+                call_command('runcrons', self.run_on_wkend_cron)
+            self.assertEqual(CronJobLog.objects.all().count(), logs_count)
 
     def test_admin(self):
         password = 'test'
