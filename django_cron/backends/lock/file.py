@@ -17,7 +17,7 @@ class FileLock(DjangoCronJobLock):
             lock_name = self.get_lock_name()
             # need loop to avoid races on file unlinking
             while True:
-                f = open(lock_name, 'w+', 0)
+                f = open(lock_name, 'w+', 1)
                 locks.lock(f, locks.LOCK_EX | locks.LOCK_NB)
             # Here is the Race:
             # Previous process "A" is still running. Process "B" opens

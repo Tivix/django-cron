@@ -9,6 +9,7 @@ from django.db.models import Q
 
 
 DEFAULT_LOCK_BACKEND = 'django_cron.backends.lock.cache.CacheLock'
+DJANGO_CRON_OUTPUT_ERRORS = False
 logger = logging.getLogger('django_cron')
 
 
@@ -86,6 +87,7 @@ class CronJobManager(object):
         self.silent = silent
         self.lock_class = self.get_lock_class()
         self.previously_ran_successful_cron = None
+        self.write_log = getattr(settings, 'DJANGO_CRON_OUTPUT_ERRORS', DJANGO_CRON_OUTPUT_ERRORS)
 
     def should_run_now(self, force=False):
         from django_cron.models import CronJobLog
@@ -165,6 +167,9 @@ class CronJobManager(object):
         cron_log.ran_at_time = getattr(self, 'user_time', None)
         cron_log.end_time = get_current_time()
         cron_log.save()
+
+        if not cron_log.is_success and self.write_log:
+            logger.error("%s cronjob error:\n%s" % (cron_log.code, cron_log.message))
 
     def make_log_msg(self, msg, *other_messages):
         MAX_MESSAGE_LENGTH = 1000

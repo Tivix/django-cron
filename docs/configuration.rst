@@ -13,5 +13,7 @@ Configuration
 
 **DJANGO_CRON_DELETE_LOGS_OLDER_THAN** - integer, number of days after which log entries will be clear (optional - if not set no entries will be deleted)
 
+**DJANGO_CRON_OUTPUT_ERRORS** - write errors to the logger in addition to storing them in the database, default: ``False``
+
 
 For more details, see :doc:`Sample Cron Configurations <sample_cron_configurations>` and :doc:`Locking backend <locking_backend>`
