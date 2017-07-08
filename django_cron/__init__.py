@@ -99,21 +99,14 @@ class CronJobManager(object):
         # If we pass --force options, we force cron run
         if force:
             return True
-        if cron_job.schedule.run_every_mins is not None:
 
+        if cron_job.schedule.retry_after_failure_mins:
             # We check last job - success or not
-            last_job = None
-            try:
-                last_job = CronJobLog.objects.filter(code=cron_job.code).latest('start_time')
-            except CronJobLog.DoesNotExist:
-                pass
-            if last_job:
-                if not last_job.is_success and cron_job.schedule.retry_after_failure_mins:
-                    if get_current_time() > last_job.start_time + timedelta(minutes=cron_job.schedule.retry_after_failure_mins):
-                        return True
-                    else:
-                        return False
+            last_job = CronJobLog.objects.filter(code=cron_job.code).filter('-start_time').first()
+            if last_job and not last_job.is_success and get_current_time() <= last_job.start_time + timedelta(minutes=cron_job.schedule.retry_after_failure_mins):
+                return False
 
+        if cron_job.schedule.run_every_mins is not None:
             try:
                 self.previously_ran_successful_cron = CronJobLog.objects.filter(
                     code=cron_job.code,
