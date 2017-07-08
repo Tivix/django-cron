@@ -102,7 +102,7 @@ class CronJobManager(object):
 
         if cron_job.schedule.retry_after_failure_mins:
             # We check last job - success or not
-            last_job = CronJobLog.objects.filter(code=cron_job.code).filter('-start_time').first()
+            last_job = CronJobLog.objects.filter(code=cron_job.code).order_by('-start_time').first()
             if last_job and not last_job.is_success and get_current_time() <= last_job.start_time + timedelta(minutes=cron_job.schedule.retry_after_failure_mins):
                 return False
 
