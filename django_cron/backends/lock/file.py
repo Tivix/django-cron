@@ -3,58 +3,27 @@ from django_cron.backends.lock.base import DjangoCronJobLock
 from django.conf import settings
 from django.core.files import locks
 import os
-import sys
-import errno
 
 
 class FileLock(DjangoCronJobLock):
     """
-    Quite a simple lock backend that uses some kind of pid file.
+    Quite a simple lock backend that uses kernel based locking
     """
+    __lock_fd = None
 
     def lock(self):
+        lock_name = self.get_lock_name()
         try:
-            lock_name = self.get_lock_name()
-            # need loop to avoid races on file unlinking
-            while True:
-                f = open(lock_name, 'w+', 0)
-                locks.lock(f, locks.LOCK_EX | locks.LOCK_NB)
-            # Here is the Race:
-            # Previous process "A" is still running. Process "B" opens
-            # the file and then the process "A" finishes and deletes it.
-            # "B" locks the deleted file (by fd it already have) and runs,
-            # then the next process "C" creates _new_ file and locks it
-            # successfully while "B" is still running.
-            # We just need to check that "B" didn't lock a deleted file
-            # to avoid any problems. If process "C" have locked
-            # a new file wile "B" stats it then ok, let "B" quit and "C" run.
-            # We can still meet an attacker that permanently creates and deletes
-            # our file but we can't avoid problems in that case.
-                if os.path.isfile(lock_name):
-                    st1 = os.fstat(f.fileno())
-                    st2 = os.stat(lock_name)
-                    if st1.st_ino == st2.st_ino:
-                        f.write(str(os.getpid()))
-                        self.lockfile = f
-                        return True
-                # else:
-                # retry. Don't unlink, next process might already use it.
-                f.close()
-
-        except IOError as e:
-            if e.errno in (errno.EACCES, errno.EAGAIN):
-                return False
-            else:
-                e = sys.exc_info()[1]
-                raise e
+            self.__lock_fd = open(lock_name, 'w+', 0)
+            locks.lock(self.__lock_fd, locks.LOCK_EX | locks.LOCK_NB)
+        except IOError:
+            return False
+        return True
         # TODO: perhaps on windows I need to catch different exception type
 
     def release(self):
-        f = self.lockfile
-        # unlink before release lock to avoid race
-        # see comment in self.lock for description
-        os.unlink(f.name)
-        f.close()
+        locks.lock(self.__lock_fd, locks.LOCK_UN)
+        self.__lock_fd.close()
 
     def get_lock_name(self):
         default_path = '/tmp'
