@@ -14,15 +14,14 @@ class FileLock(DjangoCronJobLock):
     def lock(self):
         lock_name = self.get_lock_name()
         try:
-            self.__lock_fd = open(lock_name, 'w+', 0)
+            self.__lock_fd = open(lock_name, 'w+b', 0)
             locks.lock(self.__lock_fd, locks.LOCK_EX | locks.LOCK_NB)
         except IOError:
             return False
         return True
-        # TODO: perhaps on windows I need to catch different exception type
 
     def release(self):
-        locks.lock(self.__lock_fd, locks.LOCK_UN)
+        locks.unlock(self.__lock_fd)
         self.__lock_fd.close()
 
     def get_lock_name(self):
@@ -30,7 +29,7 @@ class FileLock(DjangoCronJobLock):
         path = getattr(settings, 'DJANGO_CRON_LOCKFILE_PATH', default_path)
         if not os.path.isdir(path):
             # let it die if failed, can't run further anyway
-            os.makedirs(path)
+            os.makedirs(path, exist_ok=True)
 
         filename = self.job_name + '.lock'
         return os.path.join(path, filename)
