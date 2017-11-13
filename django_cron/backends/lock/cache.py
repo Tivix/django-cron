@@ -87,7 +87,7 @@ class CacheLock(DjangoCronJobLock):
 
     def get_running_lock_date(self):
         date = self.cache.get(self.lock_name)
-        if not timezone.is_aware(date):
+        if date and not timezone.is_aware(date):
             tz = timezone.get_current_timezone()
             date = timezone.make_aware(date, tz)
         return date
