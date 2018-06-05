@@ -27,4 +27,4 @@ Documentation
 =============
 http://django-cron.readthedocs.org/en/latest/
 
-This opensource app is brought to you by Tivix, Inc. ( http://tivix.com/ )
+This open-source app is brought to you by Tivix, Inc. ( http://tivix.com/ )
