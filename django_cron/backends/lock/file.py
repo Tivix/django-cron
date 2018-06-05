@@ -34,7 +34,7 @@ class FileLock(DjangoCronJobLock):
                     st1 = os.fstat(f.fileno())
                     st2 = os.stat(lock_name)
                     if st1.st_ino == st2.st_ino:
-                        f.write(bytes(os.getpid()))
+                        f.write(bytes(str(os.getpid()).encode('utf-8')))
                         self.lockfile = f
                         return True
                 # else:
