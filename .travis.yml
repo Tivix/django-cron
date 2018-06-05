@@ -16,7 +16,7 @@ env:
 addons:
   - postgresql: "9.3"
 install:
-  - pip install -q Django==$DJANGO --use-mirrors
+  - pip install -q Django==$DJANGO
   - pip install coveralls
   - pip install -r test_requirements.pip
 script:
