@@ -18,11 +18,6 @@ Django-cron lets you run Django/Python code on a recurring basis providing basic
 This app solves both issues to a reasonable extent. This is by no means a replacement for queues like Celery ( http://celeryproject.org/ ) etc.
 
 
-WARNING
-=============
-When upgrading from 0.3.6 to later versions you might need to remove existing South migrations, read more: https://docs.djangoproject.com/en/1.7/topics/migrations/#upgrading-from-south
-
-
 Documentation
 =============
 http://django-cron.readthedocs.org/en/latest/
