@@ -3,7 +3,6 @@ from time import sleep
 from datetime import timedelta
 
 from django import db
-
 from django.test import TransactionTestCase
 from django.core.management import call_command
 from django.test.utils import override_settings

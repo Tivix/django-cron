@@ -1,11 +1,8 @@
-from django_cron.backends.lock.base import DjangoCronJobLock
 from django.conf import settings
-
-import warnings
-
 from django.core.cache import caches
-
 from django.utils import timezone
+
+from django_cron.backends.lock.base import DjangoCronJobLock
 
 
 class CacheLock(DjangoCronJobLock):

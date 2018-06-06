@@ -3,7 +3,8 @@ from django.db import models
 
 class CronJobLog(models.Model):
     """
-    Keeps track of the cron jobs that ran etc. and any error messages if they failed.
+    Keeps track of the cron jobs that ran etc. and any error
+    messages if they failed.
     """
     code = models.CharField(max_length=64, db_index=True)
     start_time = models.DateTimeField(db_index=True)
@@ -11,10 +12,8 @@ class CronJobLog(models.Model):
     is_success = models.BooleanField(default=False)
     message = models.TextField(default='', blank=True)  # TODO: db_index=True
 
-    """
-    This field is used to mark jobs executed in exact time.
-    Jobs that run every X minutes, have this field empty.
-    """
+    # This field is used to mark jobs executed in exact time.
+    # Jobs that run every X minutes, have this field empty.
     ran_at_time = models.TimeField(null=True, blank=True, db_index=True, editable=False)
 
     def __unicode__(self):
