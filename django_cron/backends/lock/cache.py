@@ -3,17 +3,9 @@ from django.conf import settings
 
 import warnings
 
-try:
-    from django.core.cache import caches
-except ImportError:
-    # `caches` added in 1.7
-    from django.core.cache import get_cache
+from django.core.cache import caches
 
-try:
-    from django.utils import timezone
-except ImportError:
-    # timezone added in Django 1.4
-    from django_cron import timezone
+from django.utils import timezone
 
 
 class CacheLock(DjangoCronJobLock):
@@ -59,20 +51,11 @@ class CacheLock(DjangoCronJobLock):
         """
         Gets a specified cache (or the `default` cache if CRON_CACHE is not set)
         """
-        cache_name = 'default'
-        if hasattr(settings, 'CRON_CACHE'):
-            warnings.warn("CRON_CACHE config variable was renamed into DJANGO_CRON_CACHE.", DeprecationWarning)
-            cache_name = settings.CRON_CACHE
-        cache_name = getattr(settings, 'DJANGO_CRON_CACHE', cache_name)
+        cache_name = getattr(settings, 'DJANGO_CRON_CACHE', 'default')
 
         # Allow the possible InvalidCacheBackendError to happen here
         # instead of allowing unexpected parallel runs of cron jobs
-        try:
-            # Django >= 1.7.*
-            return caches[cache_name]
-        except NameError:
-            # Django <= 1.6.*
-            return get_cache(cache_name)
+        return caches[cache_name]
 
     def get_lock_name(self):
         return self.job_name
