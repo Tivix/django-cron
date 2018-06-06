@@ -1,13 +1,14 @@
 from django.conf import settings
-from django_cron import CronJobBase, Schedule, get_class
-from django_cron.models import CronJobLog
 
 from django_common.helper import send_mail
+
+from django_cron import CronJobBase, Schedule, get_class
+from django_cron.models import CronJobLog
 
 
 class FailedRunsNotificationCronJob(CronJobBase):
     """
-        Send email if cron failed to run X times in a row
+    Send email if cron failed to run X times in a row
     """
     RUN_EVERY_MINS = 30
 
