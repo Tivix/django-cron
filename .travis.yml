@@ -24,3 +24,7 @@ before_script:
   - mysql -e 'create database travis_test;'
   - psql -c 'create database travis_test;' -U postgres
   - flake8 . --config=flake8
+matrix:
+  exclude:
+    - python: "2.7"
+      env: DJANGO=2.0.*
