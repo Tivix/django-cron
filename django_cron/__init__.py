@@ -32,12 +32,13 @@ def get_current_time():
 
 
 class Schedule(object):
-    def __init__(self, run_every_mins=None, run_at_times=None, retry_after_failure_mins=None):
+    def __init__(self, run_every_mins=None, run_at_times=None, retry_after_failure_mins=None, run_tolerance_seconds=0):
         if run_at_times is None:
             run_at_times = []
         self.run_every_mins = run_every_mins
         self.run_at_times = run_at_times
         self.retry_after_failure_mins = retry_after_failure_mins
+        self.run_tolerance_seconds = run_tolerance_seconds
 
 
 class CronJobBase(object):
@@ -109,7 +110,7 @@ class CronJobManager(object):
                 pass
             if last_job:
                 if not last_job.is_success and cron_job.schedule.retry_after_failure_mins:
-                    if get_current_time() > last_job.start_time + timedelta(minutes=cron_job.schedule.retry_after_failure_mins):
+                    if get_current_time() + timedelta(seconds=cron_job.schedule.run_tolerance_seconds) > last_job.start_time + timedelta(minutes=cron_job.schedule.retry_after_failure_mins):
                         return True
                     else:
                         return False
@@ -124,7 +125,7 @@ class CronJobManager(object):
                 pass
 
             if self.previously_ran_successful_cron:
-                if get_current_time() > self.previously_ran_successful_cron.start_time + timedelta(minutes=cron_job.schedule.run_every_mins):
+                if get_current_time() + timedelta(seconds=cron_job.schedule.run_tolerance_seconds) > self.previously_ran_successful_cron.start_time + timedelta(minutes=cron_job.schedule.run_every_mins):
                     return True
             else:
                 return True
