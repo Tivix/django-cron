@@ -56,6 +56,32 @@ You can also mix up both of these methods:
 
 This will run job every 2h plus one run at 6:30.
 
+
+Run tolerance feature
+---------------------
+
+You can specify ``RUN_TOLERANCE_SECONDS`` param.
+
+This parameter specifies a time window to run the job.
+
+For example, consider a job that runs every 5 minutes and last time it was run at 00:00:00. For example, ``runcrons`` command
+gets called every five minutes starting from 00:00:00.
+
+Without this parameter, the job will be run next time at 00:10:00.
+
+If ``RUN_TOLERANCE_SECONDS`` is set to non-zero value, the job will be run next time at 00:05:00. That makes job run period
+more precise.
+
+Usage example:
+
+.. code-block:: python
+
+    class MyCronJob(CronJobBase):
+        RUN_EVERY_MINS = 5
+
+        schedule = Schedule(run_every_mins=RUN_EVERY_MINS, run_tolerance_seconds=RUN_TOLERANCE_SECONDS)
+
+
 Allowing parallels runs
 -----------------------
 
