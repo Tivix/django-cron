@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from django.contrib import admin
-from django.db.models import F
+from django.db.models import DurationField, ExpressionWrapper, F
 from django.utils.translation import ugettext_lazy as _
 
 from django_cron.models import CronJobLog
@@ -39,6 +39,11 @@ class CronJobLogAdmin(admin.ModelAdmin):
     ordering = ('-start_time',)
     list_display = ('code', 'start_time', 'end_time', 'humanize_duration', 'is_success')
     list_filter = ('code', 'start_time', 'is_success', DurationFilter)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(
+            duration=ExpressionWrapper(F('end_time') - F('start_time'), DurationField()),
+        )
 
     def get_readonly_fields(self, request, obj=None):
         if not request.user.is_superuser and obj is not None:
