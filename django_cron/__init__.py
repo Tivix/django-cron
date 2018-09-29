@@ -187,7 +187,7 @@ class CronJobManager(object):
                 trace = "".join(traceback.format_exception(ex_type, ex_value, ex_traceback))
                 self.make_log(self.msg, trace, success=False)
             except Exception as e:
-                err_msg = "Error saving cronjob log message: %s" % e
+                err_msg = "Error saving cronjob (%s) log message: %s" % (self.cron_job_class, e)
                 logger.error(err_msg)
 
         return True  # prevent exception propagation
