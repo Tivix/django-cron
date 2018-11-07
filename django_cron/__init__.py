@@ -9,6 +9,7 @@ from django.db.models import Q
 
 
 DEFAULT_LOCK_BACKEND = 'django_cron.backends.lock.cache.CacheLock'
+DEFAULT_LOG_EMPTY_MESSAGE_JOBS = True
 logger = logging.getLogger('django_cron')
 
 
@@ -149,6 +150,8 @@ class CronJobManager(object):
         return False
 
     def make_log(self, *messages, **kwargs):
+        skip_empty = getattr(settings, 'DJANGO_CRON_LOG_EMPTY_MESSAGE_JOBS', DEFAULT_LOG_EMPTY_MESSAGE_JOBS)
+
         cron_log = self.cron_log
 
         cron_job = getattr(self, 'cron_job', self.cron_job_class)
@@ -158,6 +161,11 @@ class CronJobManager(object):
         cron_log.message = self.make_log_msg(*messages)
         cron_log.ran_at_time = getattr(self, 'user_time', None)
         cron_log.end_time = get_current_time()
+
+        if skip_empty:
+            if cron_log.is_success and len(cron_log.message) == 0:
+                return
+
         cron_log.save()
 
     def make_log_msg(self, msg, *other_messages):
