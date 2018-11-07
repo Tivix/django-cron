@@ -36,6 +36,7 @@ class OutBuffer(object):
 class TestCase(TransactionTestCase):
 
     success_cron = 'test_crons.TestSucessCronJob'
+    success_with_message_cron = 'test_crons.TestSucessWithMessageCronJob'
     error_cron = 'test_crons.TestErrorCronJob'
     five_mins_cron = 'test_crons.Test5minsCronJob'
     run_at_times_cron = 'test_crons.TestRunAtTimesCronJob'
@@ -55,6 +56,24 @@ class TestCase(TransactionTestCase):
         logs_count = CronJobLog.objects.all().count()
         call_command('runcrons', self.error_cron, force=True)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
+
+    @override_settings(DJANGO_CRON_LOG_EMPTY_MESSAGE_JOBS=False)
+    def test_skip_empty_logs_failed(self):
+        logs_count = CronJobLog.objects.all().count()
+        call_command('runcrons', self.error_cron, force=True)
+        self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
+
+    @override_settings(DJANGO_CRON_LOG_EMPTY_MESSAGE_JOBS=False)
+    def test_skip_empty_logs_success_with_message(self):
+        logs_count = CronJobLog.objects.all().count()
+        call_command('runcrons', self.success_with_message_cron, force=True)
+        self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
+
+    @override_settings(DJANGO_CRON_LOG_EMPTY_MESSAGE_JOBS=False)
+    def test_skip_empty_logs_success_without_message(self):
+        logs_count = CronJobLog.objects.all().count()
+        call_command('runcrons', self.success, force=True)
+        self.assertEqual(CronJobLog.objects.all().count(), logs_count)
 
     def test_not_exists_cron(self):
         logs_count = CronJobLog.objects.all().count()

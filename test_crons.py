@@ -11,6 +11,13 @@ class TestSucessCronJob(CronJobBase):
         pass
 
 
+class TestSucessWithMessageCronJob(CronJobBase):
+    code = 'test_success_with_message_cron_job'
+    schedule = Schedule(run_every_mins=0)
+
+    def do(self):
+        return "test message"
+
 class TestErrorCronJob(CronJobBase):
     code = 'test_error_cron_job'
     schedule = Schedule(run_every_mins=0)
