@@ -150,7 +150,7 @@ class CronJobManager(object):
         return False
 
     def make_log(self, *messages, **kwargs):
-        skip_empty = getattr(settings, 'DJANGO_CRON_LOG_EMPTY_MESSAGE_JOBS', DEFAULT_LOG_EMPTY_MESSAGE_JOBS)
+        log_all = getattr(settings, 'DJANGO_CRON_LOG_EMPTY_MESSAGE_JOBS', DEFAULT_LOG_EMPTY_MESSAGE_JOBS)
 
         cron_log = self.cron_log
 
@@ -162,7 +162,7 @@ class CronJobManager(object):
         cron_log.ran_at_time = getattr(self, 'user_time', None)
         cron_log.end_time = get_current_time()
 
-        if skip_empty:
+        if not log_all:
             if cron_log.is_success and len(cron_log.message) == 0:
                 return
 
