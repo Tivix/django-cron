@@ -4,12 +4,10 @@ import threading
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
+from django.db import close_old_connections
+
 from django_cron import CronJobManager, get_class, get_current_time
 from django_cron.models import CronJobLog
-try:
-    from django.db import close_old_connections as close_connection
-except ImportError:
-    from django.db import close_connection
 
 
 DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
@@ -74,7 +72,7 @@ class Command(BaseCommand):
         for th in threads:
             th.join()
         clear_old_log_entries()
-        close_connection()
+        close_old_connections()
 
 
 def run_cron_with_cache_check(cron_class, force=False, silent=False):

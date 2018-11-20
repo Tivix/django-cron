@@ -1,40 +1,41 @@
-from django_cron.backends.lock.base import DjangoCronJobLock
-
-from django.conf import settings
-from django.core.files import locks
 import os
 import sys
 import errno
+
+from django.conf import settings
+from django.core.files import locks
+
+from django_cron.backends.lock.base import DjangoCronJobLock
 
 
 class FileLock(DjangoCronJobLock):
     """
     Quite a simple lock backend that uses some kind of pid file.
     """
-
     def lock(self):
         try:
             lock_name = self.get_lock_name()
             # need loop to avoid races on file unlinking
             while True:
-                f = open(lock_name, 'w+', 0)
+                f = open(lock_name, 'wb+', 0)
                 locks.lock(f, locks.LOCK_EX | locks.LOCK_NB)
-            # Here is the Race:
-            # Previous process "A" is still running. Process "B" opens
-            # the file and then the process "A" finishes and deletes it.
-            # "B" locks the deleted file (by fd it already have) and runs,
-            # then the next process "C" creates _new_ file and locks it
-            # successfully while "B" is still running.
-            # We just need to check that "B" didn't lock a deleted file
-            # to avoid any problems. If process "C" have locked
-            # a new file wile "B" stats it then ok, let "B" quit and "C" run.
-            # We can still meet an attacker that permanently creates and deletes
-            # our file but we can't avoid problems in that case.
+                # Here is the Race:
+                # Previous process "A" is still running. Process "B" opens
+                # the file and then the process "A" finishes and deletes it.
+                # "B" locks the deleted file (by fd it already have) and runs,
+                # then the next process "C" creates _new_ file and locks it
+                # successfully while "B" is still running.
+                # We just need to check that "B" didn't lock a deleted file
+                # to avoid any problems. If process "C" have locked
+                # a new file wile "B" stats it then ok, let "B" quit and "C"
+                # run. We can still meet an attacker that permanently
+                # creates and deletes our file but we can't avoid problems
+                # in that case.
                 if os.path.isfile(lock_name):
                     st1 = os.fstat(f.fileno())
                     st2 = os.stat(lock_name)
                     if st1.st_ino == st2.st_ino:
-                        f.write(str(os.getpid()))
+                        f.write(bytes(str(os.getpid()).encode('utf-8')))
                         self.lockfile = f
                         return True
                 # else:
