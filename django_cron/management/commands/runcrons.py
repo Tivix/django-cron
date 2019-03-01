@@ -42,12 +42,7 @@ class Command(BaseCommand):
         else:
             cron_class_names = getattr(settings, 'CRON_CLASSES', [])
 
-        try:
-            crons_to_run = [get_class(x) for x in cron_class_names]
-        except Exception:
-            error = traceback.format_exc()
-            self.stdout.write('Make sure these are valid cron class names: %s\n%s' % (cron_class_names, error))
-            return
+        crons_to_run = [get_class(x) for x in cron_class_names]
 
         for cron_class in crons_to_run:
             run_cron_with_cache_check(
