@@ -2,6 +2,7 @@ import logging
 from datetime import datetime, timedelta
 import traceback
 import time
+from subprocess import check_output
 import sys
 
 from django.conf import settings
@@ -63,6 +64,14 @@ class CronJobBase(object):
     def __init__(self):
         self.prev_success_cron = None
 
+    def get_code(self):
+        try:
+            if self.APPEND_IP_TO_CODE:
+                myserverip = check_output(['hostname', '-I'])
+                return self.code + '-' + myserverip
+        except:
+            return self.code
+
     def set_prev_success_cron(self, prev_success_cron):
         self.prev_success_cron = prev_success_cron
 
@@ -116,14 +125,14 @@ class CronJobManager(object):
 
         if cron_job.schedule.retry_after_failure_mins:
             # We check last job - success or not
-            last_job = CronJobLog.objects.filter(code=cron_job.code).order_by('-start_time').first()
+            last_job = CronJobLog.objects.filter(code=cron_job.get_code()).order_by('-start_time').first()
             if last_job and not last_job.is_success and get_current_time() <= last_job.start_time + timedelta(minutes=cron_job.schedule.retry_after_failure_mins):
                 return False
 
         if cron_job.schedule.run_every_mins is not None:
             try:
                 self.previously_ran_successful_cron = CronJobLog.objects.filter(
-                    code=cron_job.code,
+                    code=cron_job.get_code(),
                     is_success=True,
                     ran_at_time__isnull=True
                 ).latest('start_time')
@@ -143,7 +152,7 @@ class CronJobManager(object):
                 actual_time = time.strptime("%s:%s" % (now.hour, now.minute), "%H:%M")
                 if actual_time >= user_time:
                     qset = CronJobLog.objects.filter(
-                        code=cron_job.code,
+                        code=cron_job.get_code(),
                         ran_at_time=time_data,
                         is_success=True
                     ).filter(
@@ -159,7 +168,7 @@ class CronJobManager(object):
         cron_log = self.cron_log
 
         cron_job = getattr(self, 'cron_job', self.cron_job_class)
-        cron_log.code = cron_job.code
+        cron_log.code = cron_job.get_code()
 
         cron_log.is_success = kwargs.get('success', True)
         cron_log.message = self.make_log_msg(messages)
@@ -230,7 +239,7 @@ class CronJobManager(object):
 
             if self.should_run_now(force):
                 if not self.dry_run:
-                    logger.debug("Running cron: %s code %s", cron_job_class.__name__, self.cron_job.code)
+                    logger.debug("Running cron: %s code %s", cron_job_class.__name__, self.cron_job.get_code())
                     self.msg = self.cron_job.do()
                     self.make_log(self.msg, success=True)
                     self.cron_job.set_prev_success_cron(self.previously_ran_successful_cron)
