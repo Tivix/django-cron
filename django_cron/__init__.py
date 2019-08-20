@@ -68,6 +68,7 @@ class CronJobBase(object):
         try:
             if self.APPEND_IP_TO_CODE:
                 myserverip = check_output(['hostname', '-I'])
+                myserverip = myserverip.strip()
                 return self.code + '-' + myserverip
         except:
             return self.code
