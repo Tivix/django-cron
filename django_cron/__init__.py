@@ -1,5 +1,5 @@
 import logging
-from datetime import timedelta
+from datetime import timedelta, datetime
 import traceback
 import time
 
@@ -31,13 +31,42 @@ def get_current_time():
     return now if is_naive(now) else localtime(now)
 
 
+def validate_dates_index(validator, index):
+    """
+    :param validator: list format: [1, 0, 0, 1, 0, 0, 1, ...] or cron format: '*/3' , '5,15,25', '1-5'
+    :param index: integer index that starts from 0.
+    :return: a boolean that validate that index matches with validator.
+    """
+    if isinstance(validator, list):
+        # Ex: [1, 1, 0, 0, 1, ...]
+        return bool(validator[index])
+    elif '*' in validator:
+        # Ex: '*', '*/3', '*/5'
+        return bool(eval(validator.replace('*', str(index))) % 1 == 0)
+    elif '-' in validator:
+        # Ex: '1-5'
+        start, end = [int(i) for i in validator.split('-')]
+        return start <= index <= end
+    else:
+        # Ex: '5,15,25'
+        valid_indexes = [int(vi) for vi in validator.split(',')]
+        return bool(index in valid_indexes)
+
+
 class Schedule(object):
-    def __init__(self, run_every_mins=None, run_at_times=None, retry_after_failure_mins=None):
+    def __init__(self, run_every_mins=None, run_at_times=None, retry_after_failure_mins=None,
+                 day_of_month='*',  # cron format: '*/3' '5,15,25' or list: [1] * 31
+                 month_numbers='*',  # cron format: '*/3' '5,15,25' or list: [1] * 12
+                 day_of_week='*',  # cron format: '*/3' '5,15,25' or list: [1] * 7
+                 ):
         if run_at_times is None:
             run_at_times = []
         self.run_every_mins = run_every_mins
         self.run_at_times = run_at_times
         self.retry_after_failure_mins = retry_after_failure_mins
+        self.day_of_month = day_of_month
+        self.month_numbers = month_numbers
+        self.day_of_week = day_of_week
 
 
 class CronJobBase(object):
@@ -86,6 +115,23 @@ class CronJobManager(object):
         self.lock_class = self.get_lock_class()
         self.previously_ran_successful_cron = None
 
+    def should_run_today(self):
+        """
+        :return: a boolean determining whether this cron should run today or not.
+        """
+        cron_job = self.cron_job
+        now = get_current_time()
+        today = now.date()
+        today_month_day_index = today.day - 1
+        today_month_index = today.month - 1
+        today_week_day_index = today.weekday()
+
+        result = validate_dates_index(cron_job.schedule.month_numbers, today_month_index) and\
+            validate_dates_index(cron_job.schedule.day_of_month, today_month_day_index) and\
+            validate_dates_index(cron_job.schedule.day_of_week, today_week_day_index)
+
+        return result
+
     def should_run_now(self, force=False):
         from django_cron.models import CronJobLog
         cron_job = self.cron_job
@@ -99,6 +145,10 @@ class CronJobManager(object):
         # If we pass --force options, we force cron run
         if force:
             return True
+
+        if not self.should_run_today():
+            return False
+
         if cron_job.schedule.run_every_mins is not None:
 
             # We check last job - success or not
@@ -147,6 +197,49 @@ class CronJobManager(object):
                         return True
 
         return False
+
+    def get_run_times_in_future(self, from_datetime, to_datetime):
+        from django_cron.models import CronJobLog
+        cron_job = self.cron_job
+
+        # ignore previous times
+        from_datetime = max(from_datetime, get_current_time())
+        if to_datetime < from_datetime:
+            return []
+
+        future_run_datetimes = []
+        if cron_job.schedule.run_at_times:
+            run_at_times = cron_job.schedule.run_at_times
+            # Convert time strings to time
+            run_at_times_ptime = []
+            for run_time_string in run_at_times:
+                run_time = time.strptime(run_time_string, "%H:%M")
+                run_at_times_ptime.append(run_time)
+
+            # append start day times
+            from_date = from_datetime.date()
+            for run_time in run_at_times_ptime:
+                run_datetime = datetime(from_date.year, from_date.month, from_date.day, run_time.tm_hour, run_time.tm_min)
+                if run_datetime >= from_datetime:
+                    future_run_datetimes.append(run_datetime)
+
+            # append middle times
+            mid_date = from_datetime + timedelta(days=1)
+            while mid_date < to_datetime:
+                for run_time in run_at_times_ptime:
+                    run_datetime = datetime(from_date.year, from_date.month, from_date.day, run_time.tm_hour, run_time.tm_min)
+                    future_run_datetimes.append(run_datetime)
+
+            # append last day times
+            to_date = to_datetime.date()
+            for run_time in run_at_times_ptime:
+                run_datetime = datetime(to_date.year, to_date.month, to_date.day, run_time.tm_hour, run_time.tm_min)
+                if run_datetime <= to_datetime:
+                    future_run_datetimes.append(run_datetime)
+        else:
+            pass  # Todo: run_every_mins
+
+        return future_run_datetimes
 
     def make_log(self, *messages, **kwargs):
         cron_log = self.cron_log
