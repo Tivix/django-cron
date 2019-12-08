@@ -111,35 +111,18 @@ class CronJobBase(object):
         return (last_job.start_time +
                 timedelta(minutes=cls.schedule.run_every_mins) - utc_now())
 
-
-class CronJobManager(object):
-    """
-    A manager instance should be created per cron job to be run.
-    Does all the logger tracking etc. for it.
-    Used as a context manager via 'with' statement to ensure
-    proper logger in cases of job failure.
-    """
-
-    def __init__(self, cron_job_class, silent=False, *args, **kwargs):
-        super(CronJobManager, self).__init__(*args, **kwargs)
-
-        self.cron_job_class = cron_job_class
-        self.silent = silent
-        self.lock_class = self.get_lock_class()
-        self.previously_ran_successful_cron = None
-
     def should_run_today(self):
         """
         :return: a boolean determining whether this cron should run today or not.
         """
-        cron_job = self.cron_job_class
+        cron_job = self
         now = get_current_time()
         today = now.date()
         return validate_date(cron_job.schedule, today)
 
     def should_run_now(self, force=False):
         from django_cron.models import CronJobLog
-        cron_job = self.cron_job_class
+        cron_job = self
         """
         Returns a boolean determining whether this cron should run now or not!
         """
@@ -205,7 +188,7 @@ class CronJobManager(object):
 
     def get_run_times_in_future(self, from_datetime, to_datetime):
         from django_cron.models import CronJobLog
-        cron_job = self.cron_job_class
+        cron_job = self
         schedule = cron_job.schedule
         now = get_current_time()
 
@@ -275,6 +258,40 @@ class CronJobManager(object):
                     future_run_datetimes.append(run_time)
 
         return future_run_datetimes
+
+
+class CronJobManager(object):
+    """
+    A manager instance should be created per cron job to be run.
+    Does all the logger tracking etc. for it.
+    Used as a context manager via 'with' statement to ensure
+    proper logger in cases of job failure.
+    """
+
+    def __init__(self, cron_job_class, silent=False, *args, **kwargs):
+        super(CronJobManager, self).__init__(*args, **kwargs)
+
+        self.cron_job_class = cron_job_class
+        self.silent = silent
+        self.lock_class = self.get_lock_class()
+        self.previously_ran_successful_cron = None
+
+    def should_run_today(self):
+        """
+        :return: a boolean determining whether this cron should run today or not.
+        """
+        cron_job = self.cron_job_class
+        now = get_current_time()
+        today = now.date()
+        return validate_date(cron_job.schedule, today)
+
+    def should_run_now(self, force=False):
+        from django_cron.models import CronJobLog
+        cron_job = self.cron_job_class
+        """
+        Returns a boolean determining whether this cron should run now or not!
+        """
+        return cron_job.should_run_now(force=force)
 
     def make_log(self, *messages, **kwargs):
         cron_log = self.cron_log
