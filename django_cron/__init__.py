@@ -277,12 +277,10 @@ class CronJobManager(object):
         self.previously_ran_successful_cron = None
 
     def should_run_now(self, force=False):
-        from django_cron.models import CronJobLog
-        cron_job = self.cron_job_class
         """
         Returns a boolean determining whether this cron should run now or not!
         """
-        return cron_job().should_run_now(force=force)
+        return self.cron_job.should_run_now(force=force)
 
     def make_log(self, *messages, **kwargs):
         cron_log = self.cron_log
@@ -292,7 +290,7 @@ class CronJobManager(object):
 
         cron_log.is_success = kwargs.get('success', True)
         cron_log.message = self.make_log_msg(*messages)
-        cron_log.ran_at_time = getattr(self, 'user_time', None)
+        cron_log.ran_at_time = getattr(cron_job, 'user_time', None)
         cron_log.end_time = get_current_time()
         cron_log.save()
 
