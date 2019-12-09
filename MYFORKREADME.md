@@ -35,3 +35,31 @@ class ExampleCronJob(CronJobBase):
 
 ---
 - Move should_run_now method to CronJob to override it if required.
+
+Example: 
+
+```python
+from django_cron import CronJobBase, Schedule
+
+class TestCronJob(CronJobBase):
+    RUN_AT_TIMES = ['10:10', '22:10']
+    schedule = Schedule(
+        run_at_times=RUN_AT_TIMES,
+        # day_of_week='*/2',
+    )
+
+    code = 'demo.TestCronJob'
+
+    def do(self):
+        print('do TestCronJob')
+        return f'do TestCronJob at {datetime.now()}'
+
+    def should_run_now(self, force=False):
+        print('override should_run_now in cron job')
+        '''
+        if some_conditions_to_avoid_run_job:
+            return False
+        '''
+        return super(TestCronJob, self).should_run_now(force=force)
+
+```
