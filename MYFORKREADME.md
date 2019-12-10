@@ -40,6 +40,8 @@ Example:
 
 ```python
 from django_cron import CronJobBase, Schedule
+from datetime import datetime
+
 
 class TestCronJob(CronJobBase):
     RUN_AT_TIMES = ['10:10', '22:10']

@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'django_cron'
 ]
 
+CRON_MANAGER = 'demo.MyManager'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -126,4 +128,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 CRON_CLASSES = [
     "demo.cron.EmailUsercountCronJob",
+    "demo.cron.EmailUsercountCronJob2",
+    "demo.cron.TestCronJob"
 ]
