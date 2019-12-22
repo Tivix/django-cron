@@ -11,9 +11,9 @@ CRON_MANAGER = 'path.to.custom.MyManager'
 - Add day config to CronJob schedule:
 
 ```python
-day_of_month='*',  # cron format: '*/3' '5,15,25' or list: [1] * 31
-month_numbers='*',  # cron format: '*/3' '5,15,25' or list: [1] * 12
-day_of_week='*',  # cron format: '*/3' '5,15,25' or list: [1] * 7
+day_of_month='*',  # cron format: '*/10+5' '5,15,25' or list: [1] * 31
+month_numbers='*',  # cron format: '*/3' '0,3,6,9' or list: [1] * 12
+day_of_week='*',  # cron format: '*/2' '2,4,6' or list: [1] * 7
 ```
 
 Example:

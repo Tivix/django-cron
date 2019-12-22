@@ -68,9 +68,9 @@ def validate_date(schedule, date):
 
 class Schedule(object):
     def __init__(self, run_every_mins=None, run_at_times=None, retry_after_failure_mins=None,
-                 day_of_month='*',  # cron format: '*/3' '5,15,25' or list: [1] * 31
-                 month_numbers='*',  # cron format: '*/3' '5,15,25' or list: [1] * 12
-                 day_of_week='*',  # cron format: '*/3' '5,15,25' or list: [1] * 7
+                 day_of_month='*',  # cron format: '*/10+5' '5,15,25' or list: [1] * 31
+                 month_numbers='*',  # cron format: '*/3' '0,3,6,9' or list: [1] * 12
+                 day_of_week='*',  # cron format: '*/2' '2,4,6' or list: [1] * 7
                  ):
         if run_at_times is None:
             run_at_times = []
