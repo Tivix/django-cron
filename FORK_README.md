@@ -36,7 +36,7 @@ class ExampleCronJob(CronJobBase):
 ---
 - Move should_run_now method to CronJob to override it if required.
 
-Example: 
+Example:
 
 ```python
 from django_cron import CronJobBase, Schedule
