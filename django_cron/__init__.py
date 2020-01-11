@@ -93,6 +93,7 @@ class CronJobBase(object):
     """
     def __init__(self):
         self.prev_success_cron = None
+        self.previously_ran_successful_cron = None
 
     def set_prev_success_cron(self, prev_success_cron):
         self.prev_success_cron = prev_success_cron
@@ -274,7 +275,6 @@ class CronJobManager(object):
         self.cron_job_class = cron_job_class
         self.silent = silent
         self.lock_class = self.get_lock_class()
-        self.previously_ran_successful_cron = None
 
     def should_run_now(self, force=False):
         """
@@ -284,8 +284,8 @@ class CronJobManager(object):
 
     def make_log(self, *messages, **kwargs):
         cron_log = self.cron_log
+        cron_job = self.cron_job
 
-        cron_job = getattr(self, 'cron_job', self.cron_job_class)
         cron_log.code = cron_job.code
 
         cron_log.is_success = kwargs.get('success', True)
@@ -348,7 +348,7 @@ class CronJobManager(object):
                 logger.debug("Running cron: %s code %s", cron_job_class.__name__, self.cron_job.code)
                 self.msg = self.cron_job.do()
                 self.make_log(self.msg, success=True)
-                self.cron_job.set_prev_success_cron(self.previously_ran_successful_cron)
+                self.cron_job.set_prev_success_cron(self.cron_job.previously_ran_successful_cron)
 
     def get_lock_class(self):
         name = getattr(settings, 'DJANGO_CRON_LOCK_BACKEND', DEFAULT_LOCK_BACKEND)
