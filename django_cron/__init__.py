@@ -2,10 +2,8 @@ import logging
 from datetime import timedelta, datetime
 import traceback
 import time
-
-import pytz
 from django.conf import settings
-from django.utils.timezone import now as utc_now, localtime, is_naive
+from django.utils.timezone import now as utc_now, localtime, is_naive, make_aware
 from django.db.models import Q
 
 
@@ -30,40 +28,6 @@ def get_class(kls):
 def get_current_time():
     now = utc_now()
     return now if is_naive(now) else localtime(now)
-
-
-def validate_dates_index(validator, index):
-    """
-    :param validator: list format: [1, 0, 0, 1, 0, 0, 1, ...] or cron format: '*/3' , '5,15,25', '1-5'
-    :param index: integer index that starts from 0.
-    :return: a boolean that validate that index matches with validator.
-    """
-    if isinstance(validator, list):
-        # Ex: [1, 1, 0, 0, 1, ...]
-        return bool(validator[index])
-    elif '*' in validator:
-        # Ex: '*', '*/3', '*/5'
-        return bool(eval(validator.replace('*', str(index))) % 1 == 0)
-    elif '-' in validator:
-        # Ex: '1-5'
-        start, end = [int(i) for i in validator.split('-')]
-        return start <= index <= end
-    else:
-        # Ex: '5,15,25'
-        valid_indexes = [int(vi) for vi in validator.split(',')]
-        return bool(index in valid_indexes)
-
-
-def validate_date(schedule, date):
-    today_month_day_index = date.day - 1
-    today_month_index = date.month - 1
-    today_week_day_index = date.weekday()
-
-    result = validate_dates_index(schedule.month_numbers, today_month_index) and \
-             validate_dates_index(schedule.day_of_month, today_month_day_index) and \
-             validate_dates_index(schedule.day_of_week, today_week_day_index)
-
-    return result
 
 
 class Schedule(object):
@@ -112,6 +76,124 @@ class CronJobBase(object):
         return (last_job.start_time +
                 timedelta(minutes=cls.schedule.run_every_mins) - utc_now())
 
+    @classmethod
+    def validate_dates_index(cls, validator, index):
+        """
+        :param validator: list format: [1, 0, 0, 1, 0, 0, 1, ...] or cron format: '*/3' , '5,15,25', '1-5'
+        :param index: integer index that starts from 0.
+        :return: a boolean that validate that index matches with validator.
+        """
+        if isinstance(validator, list):
+            # Ex: [1, 1, 0, 0, 1, ...]
+            return bool(validator[index])
+        elif '*' in validator:
+            # Ex: '*', '*/3', '*/5'
+            return bool(eval(validator.replace('*', str(index))) % 1 == 0)
+        elif '-' in validator:
+            # Ex: '1-5'
+            start, end = [int(i) for i in validator.split('-')]
+            return start <= index <= end
+        else:
+            # Ex: '5,15,25'
+            valid_indexes = [int(vi) for vi in validator.split(',')]
+            return bool(index in valid_indexes)
+
+    @classmethod
+    def validate_date(cls, schedule, date):
+        today_month_day_index = date.day - 1
+        today_month_index = date.month - 1
+        today_week_day_index = date.weekday()
+
+        result = cls.validate_dates_index(schedule.month_numbers, today_month_index) and \
+                 cls.validate_dates_index(schedule.day_of_month, today_month_day_index) and \
+                 cls.validate_dates_index(schedule.day_of_week, today_week_day_index)
+
+        return result
+
+    @classmethod
+    def get_date_run_times_by_run_ptime(
+            cls, schedule, date, run_at_times_ptime, from_datetime=None, to_datetime=None
+    ):
+        run_datetimes = []
+        if cls.validate_date(schedule, date):
+            for run_time in run_at_times_ptime:
+                run_datetime = datetime(
+                    date.year, date.month, date.day, run_time.tm_hour, run_time.tm_min,
+                )
+                run_datetime = make_aware(run_datetime)
+                run_datetime = run_datetime if is_naive(run_datetime) else localtime(run_datetime)
+                if from_datetime is None and to_datetime is None:
+                    run_datetimes.append(run_datetime)
+                elif from_datetime is not None and run_datetime >= from_datetime:
+                    run_datetimes.append(run_datetime)
+                elif to_datetime is not None and run_datetime <= to_datetime:
+                    run_datetimes.append(run_datetime)
+        return run_datetimes
+
+    @classmethod
+    def get_run_times_by_specific_run_times(cls, schedule, from_datetime, to_datetime):
+        run_datetimes = []
+        run_at_times = schedule.run_at_times
+        # convert time strings to time
+        run_at_times_ptime = []
+        for run_time_string in run_at_times:
+            run_time = time.strptime(run_time_string, "%H:%M")
+            run_at_times_ptime.append(run_time)
+
+        # append start day times
+        run_datetimes.extend(
+            cls.get_date_run_times_by_run_ptime(
+                schedule, from_datetime.date(), run_at_times_ptime, from_datetime=from_datetime
+            )
+        )
+
+        # append middle days
+        mid_date = from_datetime.date() + timedelta(days=1)
+        while mid_date < to_datetime.date():
+            run_datetimes.extend(
+                cls.get_date_run_times_by_run_ptime(
+                    schedule, mid_date, run_at_times_ptime
+                )
+            )
+            mid_date += timedelta(days=1)
+
+        # append last day times
+        run_datetimes.extend(
+            cls.get_date_run_times_by_run_ptime(
+                schedule, to_datetime.date(), run_at_times_ptime, to_datetime=to_datetime
+            )
+        )
+        return run_datetimes
+
+    @classmethod
+    def get_run_times_by_periodic_minutes(cls, schedule, cron_job_code, from_datetime, to_datetime):
+        from django_cron.models import CronJobLog
+        run_datetimes = []
+        start_time = get_current_time()
+        last_job = None
+        try:
+            last_job = CronJobLog.objects.filter(code=cron_job_code).latest('start_time')
+        except CronJobLog.DoesNotExist:
+            pass
+        timedelta_unit = timedelta(minutes=schedule.run_every_mins)
+        if last_job:
+            start_time = last_job.start_time
+            if not last_job.is_success and schedule.retry_after_failure_mins:
+                timedelta_unit = timedelta(minutes=schedule.retry_after_failure_mins)
+
+        start_time += timedelta_unit * ((from_datetime - start_time) // timedelta_unit + 1)
+
+        run_time = start_time
+        if cls.validate_date(schedule, run_time.date()):
+            run_datetimes.append(run_time)
+
+        while run_time < to_datetime:
+            run_time += timedelta_unit
+            if cls.validate_date(schedule, run_time.date()):
+                run_datetimes.append(run_time)
+
+        return run_datetimes
+
     def should_run_today(self):
         """
         :return: a boolean determining whether this cron should run today or not.
@@ -119,7 +201,7 @@ class CronJobBase(object):
         cron_job = self
         now = get_current_time()
         today = now.date()
-        return validate_date(cron_job.schedule, today)
+        return self.validate_date(cron_job.schedule, today)
 
     def should_run_now(self, force=False):
         from django_cron.models import CronJobLog
@@ -188,7 +270,6 @@ class CronJobBase(object):
         return False
 
     def get_run_times_in_future(self, from_datetime, to_datetime):
-        from django_cron.models import CronJobLog
         cron_job = self
         schedule = cron_job.schedule
         now = get_current_time()
@@ -200,63 +281,13 @@ class CronJobBase(object):
 
         future_run_datetimes = []
         if schedule.run_at_times:
-            run_at_times = schedule.run_at_times
-            # Convert time strings to time
-            run_at_times_ptime = []
-            for run_time_string in run_at_times:
-                run_time = time.strptime(run_time_string, "%H:%M")
-                run_at_times_ptime.append(run_time)
-
-            # append start day times
-            from_date = from_datetime.date()
-            if validate_date(schedule, from_date):
-                for run_time in run_at_times_ptime:
-                    run_datetime = datetime(from_date.year, from_date.month, from_date.day, run_time.tm_hour, run_time.tm_min, tzinfo=pytz.utc)
-                    run_datetime = run_datetime if is_naive(run_datetime) else localtime(run_datetime)
-                    if run_datetime >= from_datetime:
-                        future_run_datetimes.append(run_datetime)
-
-            # append middle days
-            mid_date = from_datetime + timedelta(days=1)
-            while mid_date < to_datetime:
-                if validate_date(schedule, mid_date):
-                    for run_time in run_at_times_ptime:
-                        run_datetime = datetime(mid_date.year, mid_date.month, mid_date.day, run_time.tm_hour, run_time.tm_min, tzinfo=pytz.utc)
-                        run_datetime = run_datetime if is_naive(run_datetime) else localtime(run_datetime)
-                        future_run_datetimes.append(run_datetime)
-                mid_date += timedelta(days=1)
-
-            # append last day times
-            to_date = to_datetime.date()
-            if validate_date(schedule, to_date):
-                for run_time in run_at_times_ptime:
-                    run_datetime = datetime(to_date.year, to_date.month, to_date.day, run_time.tm_hour, run_time.tm_min, tzinfo=pytz.utc)
-                    run_datetime = run_datetime if is_naive(run_datetime) else localtime(run_datetime)
-                    if run_datetime <= to_datetime:
-                        future_run_datetimes.append(run_datetime)
+            future_run_datetimes.extend(
+                self.get_run_times_by_specific_run_times(schedule, from_datetime, to_datetime)
+            )
         elif schedule.run_every_mins:
-            start_time = now
-            last_job = None
-            try:
-                last_job = CronJobLog.objects.filter(code=cron_job.code).latest('start_time')
-            except CronJobLog.DoesNotExist:
-                pass
-            timedelta_unit = timedelta(minutes=schedule.run_every_mins)
-            if last_job:
-                start_time = last_job.start_time
-                if not last_job.is_success and schedule.retry_after_failure_mins:
-                    timedelta_unit = timedelta(minutes=schedule.retry_after_failure_mins)
-
-            start_time += timedelta_unit * ((from_datetime - start_time) // timedelta_unit + 1)
-
-            run_time = start_time
-            if validate_date(schedule, run_time.date()):
-                future_run_datetimes.append(run_time)
-
-            while run_time < to_datetime:
-                run_time += timedelta_unit
-                if validate_date(schedule, run_time.date()):
-                    future_run_datetimes.append(run_time)
+            future_run_datetimes.extend(
+                self.get_run_times_by_periodic_minutes(schedule, cron_job.code, from_datetime, to_datetime)
+            )
 
         return future_run_datetimes
 
