@@ -270,12 +270,14 @@ class CronJobBase(object):
         return False
 
     def get_run_times_in_future(self, from_datetime, to_datetime):
-        cron_job = self
-        schedule = cron_job.schedule
         now = get_current_time()
-
         # ignore previous times
         from_datetime = max(from_datetime, now)
+        return self.get_run_times_in_interval(from_datetime, to_datetime)
+
+    def get_run_times_in_interval(self, from_datetime, to_datetime):
+        cron_job = self
+        schedule = cron_job.schedule
         if to_datetime < from_datetime:
             return []
 
