@@ -1,10 +1,9 @@
 import logging
-from datetime import timedelta
+from datetime import timedelta, datetime
 import traceback
 import time
-
 from django.conf import settings
-from django.utils.timezone import now as utc_now, localtime, is_naive
+from django.utils.timezone import now as utc_now, localtime, is_naive, make_aware
 from django.db.models import Q
 
 
@@ -32,12 +31,19 @@ def get_current_time():
 
 
 class Schedule(object):
-    def __init__(self, run_every_mins=None, run_at_times=None, retry_after_failure_mins=None):
+    def __init__(self, run_every_mins=None, run_at_times=None, retry_after_failure_mins=None,
+                 day_of_month='*',  # cron format: '*/10+5' '5,15,25' or list: [1] * 31
+                 month_numbers='*',  # cron format: '*/3' '0,3,6,9' or list: [1] * 12
+                 day_of_week='*',  # cron format: '*/2' '2,4,6' or list: [1] * 7
+                 ):
         if run_at_times is None:
             run_at_times = []
         self.run_every_mins = run_every_mins
         self.run_at_times = run_at_times
         self.retry_after_failure_mins = retry_after_failure_mins
+        self.day_of_month = day_of_month
+        self.month_numbers = month_numbers
+        self.day_of_week = day_of_week
 
 
 class CronJobBase(object):
@@ -51,6 +57,7 @@ class CronJobBase(object):
     """
     def __init__(self):
         self.prev_success_cron = None
+        self.previously_ran_successful_cron = None
 
     def set_prev_success_cron(self, prev_success_cron):
         self.prev_success_cron = prev_success_cron
@@ -69,26 +76,136 @@ class CronJobBase(object):
         return (last_job.start_time +
                 timedelta(minutes=cls.schedule.run_every_mins) - utc_now())
 
+    @classmethod
+    def validate_dates_index(cls, validator, index):
+        """
+        :param validator: list format: [1, 0, 0, 1, 0, 0, 1, ...] or cron format: '*/3' , '5,15,25', '1-5'
+        :param index: integer index that starts from 0.
+        :return: a boolean that validate that index matches with validator.
+        """
+        if isinstance(validator, list):
+            # Ex: [1, 1, 0, 0, 1, ...]
+            return bool(validator[index])
+        elif '*' in validator:
+            # Ex: '*', '*/3', '*/5'
+            return bool(eval(validator.replace('*', str(index))) % 1 == 0)
+        elif '-' in validator:
+            # Ex: '1-5'
+            start, end = [int(i) for i in validator.split('-')]
+            return start <= index <= end
+        else:
+            # Ex: '5,15,25'
+            valid_indexes = [int(vi) for vi in validator.split(',')]
+            return bool(index in valid_indexes)
 
-class CronJobManager(object):
-    """
-    A manager instance should be created per cron job to be run.
-    Does all the logger tracking etc. for it.
-    Used as a context manager via 'with' statement to ensure
-    proper logger in cases of job failure.
-    """
+    @classmethod
+    def validate_date(cls, schedule, date):
+        today_month_day_index = date.day - 1
+        today_month_index = date.month - 1
+        today_week_day_index = date.weekday()
 
-    def __init__(self, cron_job_class, silent=False, *args, **kwargs):
-        super(CronJobManager, self).__init__(*args, **kwargs)
+        result = cls.validate_dates_index(schedule.month_numbers, today_month_index) and \
+                 cls.validate_dates_index(schedule.day_of_month, today_month_day_index) and \
+                 cls.validate_dates_index(schedule.day_of_week, today_week_day_index)
 
-        self.cron_job_class = cron_job_class
-        self.silent = silent
-        self.lock_class = self.get_lock_class()
-        self.previously_ran_successful_cron = None
+        return result
+
+    @classmethod
+    def get_date_run_times_by_run_ptime(
+            cls, schedule, date, run_at_times_ptime, from_datetime=None, to_datetime=None
+    ):
+        run_datetimes = []
+        if cls.validate_date(schedule, date):
+            for run_time in run_at_times_ptime:
+                run_datetime = datetime(
+                    date.year, date.month, date.day, run_time.tm_hour, run_time.tm_min,
+                )
+                run_datetime = make_aware(run_datetime)
+                run_datetime = run_datetime if is_naive(run_datetime) else localtime(run_datetime)
+                if from_datetime is None and to_datetime is None:
+                    run_datetimes.append(run_datetime)
+                elif from_datetime is not None and run_datetime >= from_datetime:
+                    run_datetimes.append(run_datetime)
+                elif to_datetime is not None and run_datetime <= to_datetime:
+                    run_datetimes.append(run_datetime)
+        return run_datetimes
+
+    @classmethod
+    def get_run_times_by_specific_run_times(cls, schedule, from_datetime, to_datetime):
+        run_datetimes = []
+        run_at_times = schedule.run_at_times
+        # convert time strings to time
+        run_at_times_ptime = []
+        for run_time_string in run_at_times:
+            run_time = time.strptime(run_time_string, "%H:%M")
+            run_at_times_ptime.append(run_time)
+
+        # append start day times
+        run_datetimes.extend(
+            cls.get_date_run_times_by_run_ptime(
+                schedule, from_datetime.date(), run_at_times_ptime, from_datetime=from_datetime
+            )
+        )
+
+        # append middle days
+        mid_date = from_datetime.date() + timedelta(days=1)
+        while mid_date < to_datetime.date():
+            run_datetimes.extend(
+                cls.get_date_run_times_by_run_ptime(
+                    schedule, mid_date, run_at_times_ptime
+                )
+            )
+            mid_date += timedelta(days=1)
+
+        # append last day times
+        run_datetimes.extend(
+            cls.get_date_run_times_by_run_ptime(
+                schedule, to_datetime.date(), run_at_times_ptime, to_datetime=to_datetime
+            )
+        )
+        return run_datetimes
+
+    @classmethod
+    def get_run_times_by_periodic_minutes(cls, schedule, cron_job_code, from_datetime, to_datetime):
+        from django_cron.models import CronJobLog
+        run_datetimes = []
+        start_time = get_current_time()
+        last_job = None
+        try:
+            last_job = CronJobLog.objects.filter(code=cron_job_code).latest('start_time')
+        except CronJobLog.DoesNotExist:
+            pass
+        timedelta_unit = timedelta(minutes=schedule.run_every_mins)
+        if last_job:
+            start_time = last_job.start_time
+            if not last_job.is_success and schedule.retry_after_failure_mins:
+                timedelta_unit = timedelta(minutes=schedule.retry_after_failure_mins)
+
+        start_time += timedelta_unit * ((from_datetime - start_time) // timedelta_unit + 1)
+
+        run_time = start_time
+        if cls.validate_date(schedule, run_time.date()):
+            run_datetimes.append(run_time)
+
+        while run_time < to_datetime:
+            run_time += timedelta_unit
+            if cls.validate_date(schedule, run_time.date()):
+                run_datetimes.append(run_time)
+
+        return run_datetimes
+
+    def should_run_today(self):
+        """
+        :return: a boolean determining whether this cron should run today or not.
+        """
+        cron_job = self
+        now = get_current_time()
+        today = now.date()
+        return self.validate_date(cron_job.schedule, today)
 
     def should_run_now(self, force=False):
         from django_cron.models import CronJobLog
-        cron_job = self.cron_job
+        cron_job = self
         """
         Returns a boolean determining whether this cron should run now or not!
         """
@@ -99,6 +216,10 @@ class CronJobManager(object):
         # If we pass --force options, we force cron run
         if force:
             return True
+
+        if not self.should_run_today():
+            return False
+
         if cron_job.schedule.run_every_mins is not None:
 
             # We check last job - success or not
@@ -148,15 +269,61 @@ class CronJobManager(object):
 
         return False
 
+    def get_run_times_in_future(self, from_datetime, to_datetime):
+        now = get_current_time()
+        # ignore previous times
+        from_datetime = max(from_datetime, now)
+        return self.get_run_times_in_interval(from_datetime, to_datetime)
+
+    def get_run_times_in_interval(self, from_datetime, to_datetime):
+        cron_job = self
+        schedule = cron_job.schedule
+        if to_datetime < from_datetime:
+            return []
+
+        future_run_datetimes = []
+        if schedule.run_at_times:
+            future_run_datetimes.extend(
+                self.get_run_times_by_specific_run_times(schedule, from_datetime, to_datetime)
+            )
+        elif schedule.run_every_mins:
+            future_run_datetimes.extend(
+                self.get_run_times_by_periodic_minutes(schedule, cron_job.code, from_datetime, to_datetime)
+            )
+
+        return future_run_datetimes
+
+
+class CronJobManager(object):
+    """
+    A manager instance should be created per cron job to be run.
+    Does all the logger tracking etc. for it.
+    Used as a context manager via 'with' statement to ensure
+    proper logger in cases of job failure.
+    """
+
+    def __init__(self, cron_job_class, silent=False, *args, **kwargs):
+        super(CronJobManager, self).__init__(*args, **kwargs)
+
+        self.cron_job_class = cron_job_class
+        self.silent = silent
+        self.lock_class = self.get_lock_class()
+
+    def should_run_now(self, force=False):
+        """
+        Returns a boolean determining whether this cron should run now or not!
+        """
+        return self.cron_job.should_run_now(force=force)
+
     def make_log(self, *messages, **kwargs):
         cron_log = self.cron_log
+        cron_job = self.cron_job
 
-        cron_job = getattr(self, 'cron_job', self.cron_job_class)
         cron_log.code = cron_job.code
 
         cron_log.is_success = kwargs.get('success', True)
         cron_log.message = self.make_log_msg(*messages)
-        cron_log.ran_at_time = getattr(self, 'user_time', None)
+        cron_log.ran_at_time = getattr(cron_job, 'user_time', None)
         cron_log.end_time = get_current_time()
         cron_log.save()
 
@@ -214,7 +381,7 @@ class CronJobManager(object):
                 logger.debug("Running cron: %s code %s", cron_job_class.__name__, self.cron_job.code)
                 self.msg = self.cron_job.do()
                 self.make_log(self.msg, success=True)
-                self.cron_job.set_prev_success_cron(self.previously_ran_successful_cron)
+                self.cron_job.set_prev_success_cron(self.cron_job.previously_ran_successful_cron)
 
     def get_lock_class(self):
         name = getattr(settings, 'DJANGO_CRON_LOCK_BACKEND', DEFAULT_LOCK_BACKEND)

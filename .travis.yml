@@ -10,8 +10,11 @@ env:
   - DJANGO=2.0.* DJANGO_SETTINGS_MODULE='settings_sqllite'
   - DJANGO=2.0.* DJANGO_SETTINGS_MODULE='settings_postgres'
   - DJANGO=2.0.* DJANGO_SETTINGS_MODULE='settings_mysql'
+services:
+  - postgresql
+  - mysql
 addons:
-  - postgresql: "9.3"
+  postgresql: "9.6"
 install:
   - pip install -q Django==$DJANGO
   - pip install coveralls
@@ -21,9 +24,9 @@ script:
 after_success:
   - coveralls
 before_script:
-  - mysql -e 'create database travis_test;'
-  - psql -c 'create database travis_test;' -U postgres
-  - flake8 . --config=flake8
+  - sudo mysql -e 'create database travis_test;'
+  - sudo -u postgres psql -c 'create database travis_test;'
+#  - sudo python -m flake8 . --config=flake8
 matrix:
   exclude:
     - python: "2.7"

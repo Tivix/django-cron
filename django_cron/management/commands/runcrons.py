@@ -5,9 +5,9 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.db import close_old_connections
 
-from django_cron import CronJobManager, get_class, get_current_time
+from django_cron import get_class, get_current_time
 from django_cron.models import CronJobLog
-
+from django_cron.settings import cron_settings
 
 DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
 
@@ -66,8 +66,8 @@ def run_cron_with_cache_check(cron_class, force=False, silent=False):
     @force      - run job even if not scheduled
     @silent     - suppress notifications
     """
-
-    with CronJobManager(cron_class, silent) as manager:
+    cron_manager = cron_settings.get_manager()
+    with cron_manager(cron_class, silent) as manager:
         manager.run(force)
 
 

@@ -13,13 +13,13 @@ import os
 
 
 here = os.path.dirname(os.path.abspath(__file__))
-f = open(os.path.join(here,  'README.rst'))
+f = open(os.path.join(here,  'README.md'))
 long_description = f.read().strip()
 f.close()
 
 setup(
     name='django-cron',
-    version='0.5.1',
+    version='0.5.3',
     author='Sumit Chachra',
     author_email='chachra@tivix.com',
     url='http://github.com/tivix/django-cron',
