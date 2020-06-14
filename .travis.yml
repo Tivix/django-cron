@@ -1,16 +1,14 @@
 dist: bionic
 os: linux
 language: python
-python:
-  - "2.7"
-  - "3.7"
-# All the other database configs are run in jobs, and just for Django 3.0/Python 3.7
-env:
-  - DJANGO=1.11.* DJANGO_SETTINGS_MODULE='settings_sqllite'
-  - DJANGO=2.0.* DJANGO_SETTINGS_MODULE='settings_sqllite'
-  - DJANGO=3.0.* DJANGO_SETTINGS_MODULE='settings_sqllite'
 jobs:
   include:
+    - python: "2.7"
+      env: DJANGO=1.11.* DJANGO_SETTINGS_MODULE='settings_sqllite'
+    - python: "3.7"
+      env: DJANGO=1.11.* DJANGO_SETTINGS_MODULE='settings_sqllite'
+    - python: "3.7"
+      env: DJANGO=2.0.* DJANGO_SETTINGS_MODULE='settings_sqllite'
     - python: "3.7"
       env: DJANGO=3.0.* DJANGO_SETTINGS_MODULE='settings_postgres'
       services:
