@@ -3,6 +3,7 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.humanize',
     'django.contrib.contenttypes',
+    'django.contrib.messages',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.sitemaps',
@@ -25,7 +26,8 @@ CRON_CLASSES = [
 
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware'
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware'
 ]
 
 LOGGING = {
