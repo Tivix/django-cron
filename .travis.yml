@@ -1,20 +1,16 @@
-sudo: false
+dist: bionic
+os: linux
 language: python
 python:
   - "2.7"
-  - "3.4"
+  - "3.7"
 env:
   - DJANGO=1.11.* DJANGO_SETTINGS_MODULE='settings_sqllite'
-  - DJANGO=1.11.* DJANGO_SETTINGS_MODULE='settings_postgres'
-  - DJANGO=1.11.* DJANGO_SETTINGS_MODULE='settings_mysql'
   - DJANGO=2.0.* DJANGO_SETTINGS_MODULE='settings_sqllite'
-  - DJANGO=2.0.* DJANGO_SETTINGS_MODULE='settings_postgres'
-  - DJANGO=2.0.* DJANGO_SETTINGS_MODULE='settings_mysql'
   - DJANGO=3.0.* DJANGO_SETTINGS_MODULE='settings_sqllite'
-  - DJANGO=3.0.* DJANGO_SETTINGS_MODULE='settings_postgres'
-  - DJANGO=3.0.* DJANGO_SETTINGS_MODULE='settings_mysql'
-addons:
-  - postgresql: "9.3"
+services:
+  - mysql
+  - postgresql
 install:
   - pip install -q Django==$DJANGO
   - pip install coveralls
@@ -24,14 +20,12 @@ script:
 after_success:
   - coveralls
 before_script:
-  - mysql -e 'create database travis_test;'
-  - psql -c 'create database travis_test;' -U postgres
+  - if [ "$DJANGO_SETTINGS_MODULE" = "settings_mysql" ]; then mysql -e 'create database travis_test;' ; fi
+  - if [ "$DJANGO_SETTINGS_MODULE" = "settings_postgres" ]; then psql -c 'create database travis_test;' -U postgres ; fi
   - flake8 . --config=flake8
-matrix:
-  exclude:
-    - python: "2.7"
-      env: DJANGO=2.0.* DJANGO_SETTINGS_MODULE='settings_sqllite'
-    - python: "2.7"
-      env: DJANGO=2.0.* DJANGO_SETTINGS_MODULE='settings_postgres'
-    - python: "2.7"
-      env: DJANGO=2.0.* DJANGO_SETTINGS_MODULE='settings_mysql'
+jobs:
+  include:
+    - python: "3.7"
+      env: DJANGO=3.0.* DJANGO_SETTINGS_MODULE='settings_postgres'
+    - python: "3.7"
+      env: DJANGO=3.0.* DJANGO_SETTINGS_MODULE='settings_mysql'
