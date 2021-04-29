@@ -41,3 +41,8 @@ class Wait3secCronJob(CronJobBase):
 
     def do(self):
         sleep(3)
+
+
+class NoCodeCronJob(CronJobBase):
+    def do(self):
+        pass
