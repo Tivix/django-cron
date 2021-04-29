@@ -2,6 +2,7 @@ import logging
 from datetime import timedelta
 import traceback
 import time
+import sys
 
 from django.conf import settings
 from django.utils.timezone import now as utc_now, localtime, is_naive
@@ -12,6 +13,10 @@ DEFAULT_LOCK_BACKEND = 'django_cron.backends.lock.cache.CacheLock'
 logger = logging.getLogger('django_cron')
 
 
+class BadCronJobError(AssertionError):
+    pass
+
+
 def get_class(kls):
     """
     TODO: move to django-common app.
@@ -19,6 +24,10 @@ def get_class(kls):
     Courtesy: http://stackoverflow.com/questions/452969/does-python-have-an-equivalent-to-java-class-forname/452981#452981
     """
     parts = kls.split('.')
+
+    if len(parts) == 1:
+        raise ImportError("'{0}'' is not a valid import path".format(kls))
+
     module = ".".join(parts[:-1])
     m = __import__(module)
     for comp in parts[1:]:
@@ -77,12 +86,11 @@ class CronJobManager(object):
     Used as a context manager via 'with' statement to ensure
     proper logger in cases of job failure.
     """
-
-    def __init__(self, cron_job_class, silent=False, *args, **kwargs):
-        super(CronJobManager, self).__init__(*args, **kwargs)
-
+    def __init__(self, cron_job_class, silent=False, dry_run=False, stdout=None):
         self.cron_job_class = cron_job_class
         self.silent = silent
+        self.dry_run = dry_run
+        self.stdout = stdout or sys.stdout
         self.lock_class = self.get_lock_class()
         self.previously_ran_successful_cron = None
 
@@ -92,7 +100,6 @@ class CronJobManager(object):
         """
         Returns a boolean determining whether this cron should run now or not!
         """
-
         self.user_time = None
         self.previously_ran_successful_cron = None
 
@@ -170,11 +177,20 @@ class CronJobManager(object):
         return self
 
     def __exit__(self, ex_type, ex_value, ex_traceback):
-        if ex_type == self.lock_class.LockFailedException:
-            if not self.silent:
-                logger.info(ex_value)
+        if ex_type is None:
+            return True
 
-        elif ex_type is not None:
+        non_logging_exceptions = [
+            BadCronJobError, self.lock_class.LockFailedException
+        ]
+
+        if ex_type in non_logging_exceptions:
+            if not self.silent:
+                self.stdout.write("{0}\n".format(ex_value))
+                logger.info(ex_value)
+        else:
+            if not self.silent:
+                self.stdout.write(u"[\N{HEAVY BALLOT X}] {0}\n".format(self.cron_job_class.code))
             try:
                 trace = "".join(traceback.format_exception(ex_type, ex_value, ex_traceback))
                 self.make_log(self.msg, trace, success=False)
@@ -189,17 +205,29 @@ class CronJobManager(object):
         apply the logic of the schedule and call do() on the CronJobBase class
         """
         cron_job_class = self.cron_job_class
+
         if not issubclass(cron_job_class, CronJobBase):
-            raise Exception('The cron_job to be run must be a subclass of %s' % CronJobBase.__name__)
+            raise BadCronJobError('The cron_job to be run must be a subclass of %s' % CronJobBase.__name__)
+
+        if not hasattr(cron_job_class, 'code'):
+            raise BadCronJobError(
+                "Cron class '{0}' does not have a code attribute"
+                .format(cron_job_class.__name__)
+            )
 
         with self.lock_class(cron_job_class, self.silent):
             self.cron_job = cron_job_class()
 
             if self.should_run_now(force):
-                logger.debug("Running cron: %s code %s", cron_job_class.__name__, self.cron_job.code)
-                self.msg = self.cron_job.do()
-                self.make_log(self.msg, success=True)
-                self.cron_job.set_prev_success_cron(self.previously_ran_successful_cron)
+                if not self.dry_run:
+                    logger.debug("Running cron: %s code %s", cron_job_class.__name__, self.cron_job.code)
+                    self.msg = self.cron_job.do()
+                    self.make_log(self.msg, success=True)
+                    self.cron_job.set_prev_success_cron(self.previously_ran_successful_cron)
+                if not self.silent:
+                    self.stdout.write(u"[\N{HEAVY CHECK MARK}] {0}\n".format(self.cron_job.code))
+            elif not self.silent:
+                self.stdout.write(u"[ ] {0}\n".format(self.cron_job.code))
 
     def get_lock_class(self):
         name = getattr(settings, 'DJANGO_CRON_LOCK_BACKEND', DEFAULT_LOCK_BACKEND)

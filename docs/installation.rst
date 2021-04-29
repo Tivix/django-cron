@@ -44,7 +44,7 @@ Installation
        */5 * * * * source /home/ubuntu/.bashrc && source /home/ubuntu/work/your-project/bin/activate && python /home/ubuntu/work/your-project/src/manage.py runcrons > /home/ubuntu/cronjob.log
 
   Management Commands:
-  
+
   I. run a specific cron with ``python manage.py runcrons cron_class ...``, for example: ::
 
         # only run "my_app.cron.MyCronJob"
@@ -52,15 +52,20 @@ Installation
 
         # run "my_app.cron.MyCronJob" and "my_app.cron.AnotherCronJob"
         $ python manage.py runcrons "my_app.cron.MyCronJob" "my_app.cron.AnotherCronJob"
-   
+
   II. force run your crons with ``python manage.py runcrons --force``, for example: ::
-   
-        # run all crons, immediately, regardless of run time 
+
+        # run all crons, immediately, regardless of run time
         $ python manage.py runcrons --force
-    
-  III. run without any messages to the console ``python manage.py runcrons --silent``, for example: ::
-       
+
+  III. perform a dry-run with ``python manage.py runcrons --dry-run``, for example: ::
+
+        # just report which crons would run, don't actually do anything
+        $ python manage.py runcrons --dry-run
+
+  IIII. run without any messages to the console ``python manage.py runcrons --silent``, for example: ::
+
         # run crons, if required, without message to console
-        $ python manage.py runcrons --silent 
-       
-       
+        $ python manage.py runcrons --silent
+
+
