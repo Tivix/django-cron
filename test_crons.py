@@ -43,9 +43,14 @@ class Wait3secCronJob(CronJobBase):
         sleep(3)
 
 
+
 class RunOnWeekendCronJob(CronJobBase):
     code = 'run_on_weekend'
     schedule = Schedule(run_on_days=[5,6], run_at_times=['0:00',])
 
+    def do(self):
+        pass
+
+class NoCodeCronJob(CronJobBase):
     def do(self):
         pass

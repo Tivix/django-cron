@@ -2,25 +2,27 @@ import threading
 from time import sleep
 from datetime import timedelta
 
-from django import db
+from mock import patch
+from freezegun import freeze_time
 
+from django import db
 from django.test import TransactionTestCase
 from django.core.management import call_command
 from django.test.utils import override_settings
 from django.test.client import Client
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib.auth.models import User
-
-from freezegun import freeze_time
 
 from django_cron.helpers import humanize_duration
 from django_cron.models import CronJobLog
+import test_crons
 
 
 class OutBuffer(object):
-    content = []
-    modified = False
-    _str_cache = ''
+    def __init__(self):
+        self._str_cache = ''
+        self.content = []
+        self.modified = False
 
     def write(self, *args):
         self.content.extend(args)
@@ -34,8 +36,16 @@ class OutBuffer(object):
         return self._str_cache
 
 
-class TestCase(TransactionTestCase):
+def call(*args, **kwargs):
+    """
+    Run the runcrons management command with a supressed output.
+    """
+    out_buffer = OutBuffer()
+    call_command('runcrons', *args, stdout=out_buffer, **kwargs)
+    return out_buffer.str_content()
 
+
+class TestCase(TransactionTestCase):
     success_cron = 'test_crons.TestSucessCronJob'
     error_cron = 'test_crons.TestErrorCronJob'
     five_mins_cron = 'test_crons.Test5minsCronJob'
@@ -43,64 +53,107 @@ class TestCase(TransactionTestCase):
     wait_3sec_cron = 'test_crons.Wait3secCronJob'
     run_on_wkend_cron = 'test_crons.RunOnWeekendCronJob'
     does_not_exist_cron = 'ThisCronObviouslyDoesntExist'
+    no_code_cron = 'test_crons.NoCodeCronJob'
     test_failed_runs_notification_cron = 'django_cron.cron.FailedRunsNotificationCronJob'
 
     def setUp(self):
         CronJobLog.objects.all().delete()
 
+    def assertReportedRun(self, job_cls, response):
+        expected_log = u"[\N{HEAVY CHECK MARK}] {0}".format(job_cls.code)
+        self.assertIn(expected_log.encode('utf8'), response)
+
+    def assertReportedNoRun(self, job_cls, response):
+        expected_log = u"[ ] {0}".format(job_cls.code)
+        self.assertIn(expected_log.encode('utf8'), response)
+
+    def assertReportedFail(self, job_cls, response):
+        expected_log = u"[\N{HEAVY BALLOT X}] {0}".format(job_cls.code)
+        self.assertIn(expected_log.encode('utf8'), response)
+
     def test_success_cron(self):
         logs_count = CronJobLog.objects.all().count()
-        call_command('runcrons', self.success_cron, force=True)
+        call(self.success_cron, force=True)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
     def test_failed_cron(self):
         logs_count = CronJobLog.objects.all().count()
-        call_command('runcrons', self.error_cron, force=True)
+        response = call(self.error_cron, force=True)
+        self.assertReportedFail(test_crons.TestErrorCronJob, response)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
     def test_not_exists_cron(self):
         logs_count = CronJobLog.objects.all().count()
-        out_buffer = OutBuffer()
-        call_command('runcrons', self.does_not_exist_cron, force=True, stdout=out_buffer)
-
-        self.assertIn('Make sure these are valid cron class names', out_buffer.str_content())
-        self.assertIn(self.does_not_exist_cron, out_buffer.str_content())
+        response = call(self.does_not_exist_cron, force=True)
+        self.assertIn('Make sure these are valid cron class names', response)
+        self.assertIn(self.does_not_exist_cron, response)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count)
+
+    @patch('django_cron.logger')
+    def test_requires_code(self, mock_logger):
+        response = call(self.no_code_cron, force=True)
+        self.assertIn('does not have a code attribute', response)
+        mock_logger.info.assert_called()
 
     @override_settings(DJANGO_CRON_LOCK_BACKEND='django_cron.backends.lock.file.FileLock')
     def test_file_locking_backend(self):
         logs_count = CronJobLog.objects.all().count()
-        call_command('runcrons', self.success_cron, force=True)
+        call(self.success_cron, force=True)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
+
+    @patch.object(test_crons.TestSucessCronJob, 'do')
+    def test_dry_run_does_not_perform_task(self, mock_do):
+        response = call(self.success_cron, dry_run=True)
+        self.assertReportedRun(test_crons.TestSucessCronJob, response)
+        mock_do.assert_not_called()
+        self.assertFalse(CronJobLog.objects.exists())
+
+    @patch.object(test_crons.TestSucessCronJob, 'do')
+    def test_non_dry_run_performs_task(self, mock_do):
+        mock_do.return_value = 'message'
+        response = call(self.success_cron)
+        self.assertReportedRun(test_crons.TestSucessCronJob, response)
+        mock_do.assert_called_once()
+        self.assertEquals(1, CronJobLog.objects.count())
+        log = CronJobLog.objects.get()
+        self.assertEquals('message', log.message)
+        self.assertTrue(log.is_success)
 
     def test_runs_every_mins(self):
         logs_count = CronJobLog.objects.all().count()
 
         with freeze_time("2014-01-01 00:00:00"):
-            call_command('runcrons', self.five_mins_cron)
+            response = call(self.five_mins_cron)
+        self.assertReportedRun(test_crons.Test5minsCronJob, response)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
         with freeze_time("2014-01-01 00:04:59"):
-            call_command('runcrons', self.five_mins_cron)
+            response = call(self.five_mins_cron)
+        self.assertReportedNoRun(test_crons.Test5minsCronJob, response)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
         with freeze_time("2014-01-01 00:05:01"):
-            call_command('runcrons', self.five_mins_cron)
+            response = call(self.five_mins_cron)
+        self.assertReportedRun(test_crons.Test5minsCronJob, response)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 2)
 
     def test_runs_at_time(self):
         logs_count = CronJobLog.objects.all().count()
         with freeze_time("2014-01-01 00:00:01"):
-            call_command('runcrons', self.run_at_times_cron)
+            response = call(self.run_at_times_cron)
+        self.assertReportedRun(test_crons.TestRunAtTimesCronJob, response)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
         with freeze_time("2014-01-01 00:04:50"):
-            call_command('runcrons', self.run_at_times_cron)
+            response = call(self.run_at_times_cron)
+        self.assertReportedNoRun(test_crons.TestRunAtTimesCronJob, response)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
         with freeze_time("2014-01-01 00:05:01"):
-            call_command('runcrons', self.run_at_times_cron)
+            response = call(self.run_at_times_cron)
+        self.assertReportedRun(test_crons.TestRunAtTimesCronJob, response)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 2)
+
 
     def test_run_on_weekend(self):
         for test_date in ("2017-06-17", "2017-06-18"): # Saturday and Sunday
@@ -114,6 +167,26 @@ class TestCase(TransactionTestCase):
             with freeze_time(test_date):
                 call_command('runcrons', self.run_on_wkend_cron)
             self.assertEqual(CronJobLog.objects.all().count(), logs_count)
+            
+    def test_silent_produces_no_output_success(self):
+        response = call(self.success_cron, silent=True)
+        self.assertEquals(1, CronJobLog.objects.count())
+        self.assertEquals('', response)
+
+    def test_silent_produces_no_output_no_run(self):
+        with freeze_time("2014-01-01 00:00:00"):
+            response = call(self.run_at_times_cron, silent=True)
+        self.assertEquals(1, CronJobLog.objects.count())
+        self.assertEquals('', response)
+
+        with freeze_time("2014-01-01 00:00:01"):
+            response = call(self.run_at_times_cron, silent=True)
+        self.assertEquals(1, CronJobLog.objects.count())
+        self.assertEquals('', response)
+
+    def test_silent_produces_no_output_failure(self):
+        response = call(self.error_cron, silent=True)
+        self.assertEquals('', response)
 
     def test_admin(self):
         password = 'test'
@@ -126,14 +199,14 @@ class TestCase(TransactionTestCase):
         self.client.login(username=user.username, password=password)
 
         # edit CronJobLog object
-        call_command('runcrons', self.success_cron, force=True)
+        call(self.success_cron, force=True)
         log = CronJobLog.objects.all()[0]
         url = reverse('admin:django_cron_cronjoblog_change', args=(log.id,))
         response = self.client.get(url)
         self.assertIn('Cron job logs', str(response.content))
 
     def run_cronjob_in_thread(self, logs_count):
-        call_command('runcrons', self.wait_3sec_cron)
+        call(self.wait_3sec_cron)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
         db.close_old_connections()
 
@@ -147,7 +220,7 @@ class TestCase(TransactionTestCase):
         t.start()
         # this shouldn't get running
         sleep(0.1)  # to avoid race condition
-        call_command('runcrons', self.wait_3sec_cron)
+        call(self.wait_3sec_cron)
         t.join(10)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
@@ -167,7 +240,7 @@ class TestCase(TransactionTestCase):
     #     t.start()
     #     # this shouldn't get running
     #     sleep(1)  # to avoid race condition
-    #     call_command('runcrons', self.wait_3sec_cron)
+    #     call(self.wait_3sec_cron)
     #     t.join(10)
     #     self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
@@ -176,8 +249,8 @@ class TestCase(TransactionTestCase):
         logs_count = CronJobLog.objects.all().count()
 
         for i in range(10):
-            call_command('runcrons', self.error_cron, force=True)
-        call_command('runcrons', self.test_failed_runs_notification_cron)
+            call(self.error_cron, force=True)
+        call(self.test_failed_runs_notification_cron)
 
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 11)
 
