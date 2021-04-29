@@ -57,11 +57,8 @@ class DjangoCronJobLock(object):
         return "%s: lock found. Will try later." % self.job_name
 
     def __enter__(self):
-        if self.parallel:
-            return
-        else:
-            if not self.lock():
-                raise self.LockFailedException(self.lock_failed_message())
+        if not self.parallel and not self.lock():
+            raise self.LockFailedException(self.lock_failed_message())
 
     def __exit__(self, type, value, traceback):
         if not self.parallel:
