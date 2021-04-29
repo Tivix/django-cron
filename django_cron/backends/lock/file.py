@@ -1,8 +1,9 @@
-from django_cron.backends.lock.base import DjangoCronJobLock
+import os
 
 from django.conf import settings
 from django.core.files import locks
-import os
+
+from django_cron.backends.lock.base import DjangoCronJobLock
 
 
 class FileLock(DjangoCronJobLock):
