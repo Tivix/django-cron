@@ -1,5 +1,5 @@
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 import traceback
 import time
 import sys
@@ -10,6 +10,7 @@ from django.db.models import Q
 
 
 DEFAULT_LOCK_BACKEND = 'django_cron.backends.lock.cache.CacheLock'
+DJANGO_CRON_OUTPUT_ERRORS = False
 logger = logging.getLogger('django_cron')
 
 
@@ -41,12 +42,13 @@ def get_current_time():
 
 
 class Schedule(object):
-    def __init__(self, run_every_mins=None, run_at_times=None, retry_after_failure_mins=None):
+    def __init__(self, run_every_mins=None, run_at_times=None, retry_after_failure_mins=None, run_on_days=None):
         if run_at_times is None:
             run_at_times = []
         self.run_every_mins = run_every_mins
         self.run_at_times = run_at_times
         self.retry_after_failure_mins = retry_after_failure_mins
+        self.run_on_days = run_on_days
 
 
 class CronJobBase(object):
@@ -93,6 +95,7 @@ class CronJobManager(object):
         self.stdout = stdout or sys.stdout
         self.lock_class = self.get_lock_class()
         self.previously_ran_successful_cron = None
+        self.write_log = getattr(settings, 'DJANGO_CRON_OUTPUT_ERRORS', DJANGO_CRON_OUTPUT_ERRORS)
 
     def should_run_now(self, force=False):
         from django_cron.models import CronJobLog
@@ -106,6 +109,10 @@ class CronJobManager(object):
         # If we pass --force options, we force cron run
         if force:
             return True
+
+        if cron_job.schedule.run_on_days is not None:
+            if not datetime.today().weekday() in cron_job.schedule.run_on_days:
+                return False
 
         if cron_job.schedule.retry_after_failure_mins:
             # We check last job - success or not
@@ -159,6 +166,9 @@ class CronJobManager(object):
         cron_log.ran_at_time = getattr(self, 'user_time', None)
         cron_log.end_time = get_current_time()
         cron_log.save()
+
+        if not cron_log.is_success and self.write_log:
+            logger.error("%s cronjob error:\n%s" % (cron_log.code, cron_log.message))
 
     def make_log_msg(self, messages):
         full_message = ''
