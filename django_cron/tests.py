@@ -10,7 +10,7 @@ from django.test import TransactionTestCase
 from django.core.management import call_command
 from django.test.utils import override_settings
 from django.test.client import Client
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib.auth.models import User
 
 from django_cron.helpers import humanize_duration

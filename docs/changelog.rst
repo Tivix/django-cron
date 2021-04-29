@@ -1,5 +1,15 @@
 Changelog
 =========
+0.5.1
+------
+
+    - Fixed error in file locking backend with Python 3
+
+    - Fixed `'NoneType' object has no attribute 'utcoffset'` error
+
+    - Updated unit tests and demo for Django 2.0 compatibility
+
+
 0.5.0
 ------
 
