@@ -15,7 +15,7 @@ class FileLock(DjangoCronJobLock):
     def lock(self):
         lock_name = self.get_lock_name()
         try:
-            self.__lock_fd = open(lock_name, 'w+b', 0)
+            self.__lock_fd = open(lock_name, 'w+b', 1)
             locks.lock(self.__lock_fd, locks.LOCK_EX | locks.LOCK_NB)
         except IOError:
             return False
