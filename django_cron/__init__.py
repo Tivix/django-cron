@@ -63,7 +63,8 @@ class CronJobBase(object):
     """
     def __init__(self):
         self.prev_success_cron = None
-
+    
+    @classmethod
     def get_code(self):
         try:
             if self.APPEND_IP_TO_CODE:
