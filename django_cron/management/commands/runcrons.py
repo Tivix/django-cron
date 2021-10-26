@@ -4,7 +4,6 @@ from datetime import timedelta
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from django.db import close_old_connections
 
 from django_cron import CronJobManager, get_class, get_current_time
 from django_cron.models import CronJobLog
@@ -67,7 +66,6 @@ class Command(BaseCommand):
             )
 
         clear_old_log_entries()
-        close_old_connections()
 
 
 def run_cron_with_cache_check(
