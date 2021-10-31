@@ -70,7 +70,7 @@ class CronJobBase(object):
             if self.APPEND_IP_TO_CODE:
                 myserverip = check_output(['hostname', '-I'])
                 myserverip = myserverip.strip()
-                return self.code + '-' + myserverip
+                return self.code + '-' + myserverip.decode('utf-8')
         except:
             return self.code
 
