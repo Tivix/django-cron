@@ -1,4 +1,9 @@
 ===========
+Deprecated
+===========
+Please use https://github.com/iMerica/dj-rest-auth as this project is no longer maintained. Thanks!
+
+===========
 django-cron
 ===========
 
