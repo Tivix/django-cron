@@ -117,9 +117,9 @@ class TestCase(TransactionTestCase):
         response = call(self.success_cron)
         self.assertReportedRun(test_crons.TestSuccessCronJob, response)
         mock_do.assert_called_once()
-        self.assertEquals(1, CronJobLog.objects.count())
+        self.assertEqual(1, CronJobLog.objects.count())
         log = CronJobLog.objects.get()
-        self.assertEquals(
+        self.assertEqual(
             "message", log.message.strip()
         )  # CronJobManager adds new line at the end of each message
         self.assertTrue(log.is_success)
@@ -180,23 +180,23 @@ class TestCase(TransactionTestCase):
 
     def test_silent_produces_no_output_success(self):
         response = call(self.success_cron, silent=True)
-        self.assertEquals(1, CronJobLog.objects.count())
-        self.assertEquals("", response)
+        self.assertEqual(1, CronJobLog.objects.count())
+        self.assertEqual("", response)
 
     def test_silent_produces_no_output_no_run(self):
         with freeze_time("2014-01-01 00:00:00"):
             response = call(self.run_at_times_cron, silent=True)
-        self.assertEquals(1, CronJobLog.objects.count())
-        self.assertEquals("", response)
+        self.assertEqual(1, CronJobLog.objects.count())
+        self.assertEqual("", response)
 
         with freeze_time("2014-01-01 00:00:01"):
             response = call(self.run_at_times_cron, silent=True)
-        self.assertEquals(1, CronJobLog.objects.count())
-        self.assertEquals("", response)
+        self.assertEqual(1, CronJobLog.objects.count())
+        self.assertEqual("", response)
 
     def test_silent_produces_no_output_failure(self):
         response = call(self.error_cron, silent=True)
-        self.assertEquals("", response)
+        self.assertEqual("", response)
 
     def test_admin(self):
         password = "test"

@@ -19,5 +19,6 @@ def runtests():
     test_runner = TestRunner(verbosity=1, interactive=False)
     if hasattr(django, "setup"):
         django.setup()
+    # returns number of failed tests
     failures = test_runner.run_tests(["django_cron"])
     sys.exit(bool(failures))
