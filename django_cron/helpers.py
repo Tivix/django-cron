@@ -1,5 +1,5 @@
-from django.utils.translation import ugettext as _
 from django.template.defaultfilters import pluralize
+from django.utils.translation import ugettext as _
 
 
 def humanize_duration(duration):
@@ -15,15 +15,15 @@ def humanize_duration(duration):
 
     parts = []
     if days > 0:
-        parts.append(u'%s %s' % (days, pluralize(days, _('day,days'))))
+        parts.append(u"%s %s" % (days, pluralize(days, _("day,days"))))
 
     if hours > 0:
-        parts.append(u'%s %s' % (hours, pluralize(hours, _('hour,hours'))))
+        parts.append(u"%s %s" % (hours, pluralize(hours, _("hour,hours"))))
 
     if minutes > 0:
-        parts.append(u'%s %s' % (minutes, pluralize(minutes, _('minute,minutes'))))
+        parts.append(u"%s %s" % (minutes, pluralize(minutes, _("minute,minutes"))))
 
     if seconds > 0:
-        parts.append(u'%s %s' % (seconds, pluralize(seconds, _('second,seconds'))))
+        parts.append(u"%s %s" % (seconds, pluralize(seconds, _("second,seconds"))))
 
-    return ', '.join(parts) if len(parts) != 0 else _('< 1 second')
+    return ", ".join(parts) if len(parts) != 0 else _("< 1 second")

@@ -14,15 +14,19 @@ def humanize_duration(duration):
 
     parts = []
     if days > 0:
-        parts.append(u'%s %s' % (days, _('day') if days == 1 else _('days')))
+        parts.append(u"%s %s" % (days, _("day") if days == 1 else _("days")))
 
     if hours > 0:
-        parts.append(u'%s %s' % (hours, _('hour') if hours == 1 else _('hours')))
+        parts.append(u"%s %s" % (hours, _("hour") if hours == 1 else _("hours")))
 
     if minutes > 0:
-        parts.append(u'%s %s' % (minutes, _('minute') if minutes == 1 else _('minutes')))
+        parts.append(
+            u"%s %s" % (minutes, _("minute") if minutes == 1 else _("minutes"))
+        )
 
     if seconds > 0:
-        parts.append(u'%s %s' % (seconds, _('second') if seconds == 1 else _('seconds')))
+        parts.append(
+            u"%s %s" % (seconds, _("second") if seconds == 1 else _("seconds"))
+        )
 
-    return ' '.join(parts) if len(parts) != 0 else _('< 1 second')
+    return " ".join(parts) if len(parts) != 0 else _("< 1 second")

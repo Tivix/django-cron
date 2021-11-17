@@ -3,21 +3,21 @@
 import os
 import sys
 
-if 'DJANGO_SETTINGS_MODULE' not in os.environ:
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'settings_sqllite'
+if "DJANGO_SETTINGS_MODULE" not in os.environ:
+    os.environ["DJANGO_SETTINGS_MODULE"] = "settings_sqllite"
 
 test_dir = os.path.dirname(__file__)
 sys.path.insert(0, test_dir)
 
 import django
-from django.test.utils import get_runner
 from django.conf import settings
+from django.test.utils import get_runner
 
 
 def runtests():
     TestRunner = get_runner(settings)
     test_runner = TestRunner(verbosity=1, interactive=False)
-    if hasattr(django, 'setup'):
+    if hasattr(django, "setup"):
         django.setup()
-    failures = test_runner.run_tests(['django_cron'])
+    failures = test_runner.run_tests(["django_cron"])
     sys.exit(bool(failures))
