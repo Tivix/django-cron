@@ -14,7 +14,7 @@ class CacheLock(DjangoCronJobLock):
     DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
 
     def __init__(self, cron_class, *args, **kwargs):
-        super(CacheLock, self).__init__(cron_class, *args, **kwargs)
+        super().__init__(cron_class, *args, **kwargs)
 
         self.cache = self.get_cache_by_name()
         self.lock_name = self.get_lock_name()
