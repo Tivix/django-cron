@@ -19,7 +19,7 @@ class DjangoCronJobLock(object):
         """
         This method inits the class.
         You should take care of getting all
-        nessesary thing from input parameters here
+        necessary thing from input parameters here
         Base class processes
             * self.job_name
             * self.job_code
