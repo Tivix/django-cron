@@ -3,7 +3,7 @@ from time import sleep
 from django_cron import CronJobBase, Schedule
 
 
-class TestSucessCronJob(CronJobBase):
+class TestSuccessCronJob(CronJobBase):
     code = 'test_success_cron_job'
     schedule = Schedule(run_every_mins=0)
 

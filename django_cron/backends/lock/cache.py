@@ -13,7 +13,7 @@ class CacheLock(DjangoCronJobLock):
     DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
 
     def __init__(self, cron_class, *args, **kwargs):
-        super(CacheLock, self).__init__(cron_class, *args, **kwargs)
+        super().__init__(cron_class, *args, **kwargs)
 
         self.cache = self.get_cache_by_name()
         self.lock_name = self.get_lock_name()
@@ -48,7 +48,8 @@ class CacheLock(DjangoCronJobLock):
         """
         Gets a specified cache (or the `default` cache if CRON_CACHE is not set)
         """
-        cache_name = getattr(settings, 'DJANGO_CRON_CACHE', 'default')
+        default_cache = "default"
+        cache_name = getattr(settings, "DJANGO_CRON_CACHE", default_cache)
 
         # Allow the possible InvalidCacheBackendError to happen here
         # instead of allowing unexpected parallel runs of cron jobs
@@ -58,11 +59,10 @@ class CacheLock(DjangoCronJobLock):
         return self.job_name
 
     def get_cache_timeout(self, cron_class):
-        timeout = self.DEFAULT_LOCK_TIME
         try:
             timeout = getattr(cron_class, 'DJANGO_CRON_LOCK_TIME', settings.DJANGO_CRON_LOCK_TIME)
         except:
-            pass
+            timeout = self.DEFAULT_LOCK_TIME
         return timeout
 
     def get_running_lock_date(self):

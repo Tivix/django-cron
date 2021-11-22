@@ -46,7 +46,7 @@ def call(*args, **kwargs):
 
 
 class TestCase(TransactionTestCase):
-    success_cron = 'test_crons.TestSucessCronJob'
+    success_cron = 'test_crons.TestSuccessCronJob'
     error_cron = 'test_crons.TestErrorCronJob'
     five_mins_cron = 'test_crons.Test5minsCronJob'
     run_at_times_cron = 'test_crons.TestRunAtTimesCronJob'
@@ -61,15 +61,15 @@ class TestCase(TransactionTestCase):
 
     def assertReportedRun(self, job_cls, response):
         expected_log = u"[\N{HEAVY CHECK MARK}] {0}".format(job_cls.code)
-        self.assertIn(expected_log.encode('utf8'), response)
+        self.assertIn(expected_log, response)
 
     def assertReportedNoRun(self, job_cls, response):
         expected_log = u"[ ] {0}".format(job_cls.code)
-        self.assertIn(expected_log.encode('utf8'), response)
+        self.assertIn(expected_log, response)
 
     def assertReportedFail(self, job_cls, response):
         expected_log = u"[\N{HEAVY BALLOT X}] {0}".format(job_cls.code)
-        self.assertIn(expected_log.encode('utf8'), response)
+        self.assertIn(expected_log, response)
 
     def test_success_cron(self):
         logs_count = CronJobLog.objects.all().count()
@@ -101,22 +101,22 @@ class TestCase(TransactionTestCase):
         call(self.success_cron, force=True)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
-    @patch.object(test_crons.TestSucessCronJob, 'do')
+    @patch.object(test_crons.TestSuccessCronJob, 'do')
     def test_dry_run_does_not_perform_task(self, mock_do):
         response = call(self.success_cron, dry_run=True)
-        self.assertReportedRun(test_crons.TestSucessCronJob, response)
+        self.assertReportedRun(test_crons.TestSuccessCronJob, response)
         mock_do.assert_not_called()
         self.assertFalse(CronJobLog.objects.exists())
 
-    @patch.object(test_crons.TestSucessCronJob, 'do')
+    @patch.object(test_crons.TestSuccessCronJob, 'do')
     def test_non_dry_run_performs_task(self, mock_do):
         mock_do.return_value = 'message'
         response = call(self.success_cron)
-        self.assertReportedRun(test_crons.TestSucessCronJob, response)
+        self.assertReportedRun(test_crons.TestSuccessCronJob, response)
         mock_do.assert_called_once()
-        self.assertEquals(1, CronJobLog.objects.count())
+        self.assertEqual(1, CronJobLog.objects.count())
         log = CronJobLog.objects.get()
-        self.assertEquals('message', log.message)
+        self.assertEqual('message', log.message.strip())  # CronJobManager adds new line at the end of each message
         self.assertTrue(log.is_success)
 
     def test_runs_every_mins(self):
@@ -170,23 +170,23 @@ class TestCase(TransactionTestCase):
             
     def test_silent_produces_no_output_success(self):
         response = call(self.success_cron, silent=True)
-        self.assertEquals(1, CronJobLog.objects.count())
-        self.assertEquals('', response)
+        self.assertEqual(1, CronJobLog.objects.count())
+        self.assertEqual('', response)
 
     def test_silent_produces_no_output_no_run(self):
         with freeze_time("2014-01-01 00:00:00"):
             response = call(self.run_at_times_cron, silent=True)
-        self.assertEquals(1, CronJobLog.objects.count())
-        self.assertEquals('', response)
+        self.assertEqual(1, CronJobLog.objects.count())
+        self.assertEqual('', response)
 
         with freeze_time("2014-01-01 00:00:01"):
             response = call(self.run_at_times_cron, silent=True)
-        self.assertEquals(1, CronJobLog.objects.count())
-        self.assertEquals('', response)
+        self.assertEqual(1, CronJobLog.objects.count())
+        self.assertEqual('', response)
 
     def test_silent_produces_no_output_failure(self):
         response = call(self.error_cron, silent=True)
-        self.assertEquals('', response)
+        self.assertEqual('', response)
 
     def test_admin(self):
         password = 'test'
