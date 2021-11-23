@@ -26,7 +26,7 @@ class DjangoCronJobLock(object):
             * self.silent
         for you. The rest is backend-specific.
         """
-        self.job_name = cron_class.__name__
+        self.job_name = '.'.join([cron_class.__module__, cron_class.__name__])
         self.job_code = cron_class.code
         self.parallel = getattr(cron_class, 'ALLOW_PARALLEL_RUNS', False)
         self.silent = silent
