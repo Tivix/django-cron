@@ -26,3 +26,8 @@ class CronJobLog(models.Model):
             ('code', 'start_time')  # useful when finding latest run (order by start_time) of cron
         ]
         app_label = 'django_cron'
+
+
+class CronJobLock(models.Model):
+    job_name = models.CharField(max_length=200, unique=True)
+    locked = models.BooleanField(default=False)
