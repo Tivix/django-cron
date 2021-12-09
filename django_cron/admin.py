@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.contrib import admin
 from django.db.models import F
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from django_cron.models import CronJobLog
 from django_cron.helpers import humanize_duration
