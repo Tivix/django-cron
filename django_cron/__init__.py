@@ -68,8 +68,14 @@ class CronJobBase(object):
     def get_code(self):
         try:
             if self.APPEND_IP_TO_CODE:
-                myserverip = check_output(['hostname', '-I'])
-                myserverip = myserverip.strip()
+                myserverip = None
+                try:
+                    myserverip = check_output(['/usr/bin/ec2metadata', '--public-ipv4'])
+                except:
+                    pass
+                if not myserverip:
+                    myserverip = check_output(['hostname', '-I'])
+                    myserverip = myserverip.strip()
                 return self.code + '-' + myserverip.decode('utf-8')
         except:
             return self.code
