@@ -71,6 +71,7 @@ class CronJobBase(object):
                 myserverip = None
                 try:
                     myserverip = check_output(['/usr/bin/ec2metadata', '--public-ipv4'])
+                    myserverip = myserverip.strip()
                 except:
                     pass
                 if not myserverip:

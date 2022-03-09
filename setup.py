@@ -19,7 +19,7 @@ f.close()
 
 setup(
     name='django-cron',
-    version='0.5.1.8',
+    version='0.5.1.9',
     author='Sumit Chachra',
     author_email='chachra@tivix.com',
     url='https://github.com/Trendlyne-technologies/django-cron',
