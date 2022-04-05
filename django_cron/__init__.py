@@ -8,6 +8,7 @@ import sys
 from django.conf import settings
 from django.utils.timezone import now as utc_now, localtime, is_naive
 from django.db.models import Q
+from django_common.helper import send_mail
 
 
 DEFAULT_LOCK_BACKEND = 'django_cron.backends.lock.cache.CacheLock'
@@ -61,6 +62,9 @@ class CronJobBase(object):
     Following functions:
     + do - This is the actual business logic to be run at the given schedule
     """
+    
+    SEND_FAILED_EMAIL = []
+    
     def __init__(self):
         self.prev_success_cron = None
     
@@ -114,6 +118,7 @@ class CronJobManager(object):
         self.lock_class = self.get_lock_class()
         self.previously_ran_successful_cron = None
         self.write_log = getattr(settings, 'DJANGO_CRON_OUTPUT_ERRORS', DJANGO_CRON_OUTPUT_ERRORS)
+        self.send_error_email = getattr(settings, 'DJANGO_CRON_SEND_ERROR_EMAIL', False)
 
     def should_run_now(self, force=False):
         from django_cron.models import CronJobLog
@@ -187,6 +192,26 @@ class CronJobManager(object):
 
         if not cron_log.is_success and self.write_log:
             logger.error("%s cronjob error:\n%s" % (cron_log.code, cron_log.message))
+        
+        if self.send_error_email and not cron_log.is_success:
+            try:
+                emails = [admin[1] for admin in settings.ADMINS]
+                if getattr(cron_job, "SEND_FAILED_EMAIL", []):
+                    emails.extend(cron_job.SEND_FAILED_EMAIL)
+                
+                failed_runs_cronjob_email_prefix = getattr(settings, 'FAILED_RUNS_CRONJOB_EMAIL_PREFIX', '')
+                min_failures = getattr(cron_job, 'MIN_NUM_FAILURES', 10)
+                send_mail(
+                    '%s%s failed %s times in a row!' % (
+                        failed_runs_cronjob_email_prefix,
+                        cron_log.code,
+                        min_failures,
+                    ),
+                    cron_log.message,
+                    settings.DEFAULT_FROM_EMAIL, emails
+                )
+            except Exception as e:
+                logger.exception(e)
 
     def make_log_msg(self, messages):
         full_message = ''

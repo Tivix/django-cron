@@ -55,7 +55,7 @@ class CacheLock(DjangoCronJobLock):
         return caches[cache_name]
 
     def get_lock_name(self):
-        return self.job_name
+        return self.job_code
 
     def get_cache_timeout(self, cron_class):
         timeout = self.DEFAULT_LOCK_TIME
