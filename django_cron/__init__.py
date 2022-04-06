@@ -118,7 +118,7 @@ class CronJobManager(object):
         self.lock_class = self.get_lock_class()
         self.previously_ran_successful_cron = None
         self.write_log = getattr(settings, 'DJANGO_CRON_OUTPUT_ERRORS', DJANGO_CRON_OUTPUT_ERRORS)
-        self.send_error_email = getattr(settings, 'DJANGO_CRON_SEND_ERROR_EMAIL', False)
+        self.send_error_email = getattr(settings, 'DJANGO_CRON_SEND_IMMEDIATE_ERROR_EMAIL', False)
 
     def should_run_now(self, force=False):
         from django_cron.models import CronJobLog

@@ -5,6 +5,7 @@ from datetime import timedelta
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.db import close_old_connections
+from django_common.helper import send_mail
 
 from django_cron import CronJobManager, get_class, get_current_time
 from django_cron.models import CronJobLog
@@ -66,6 +67,17 @@ class Command(BaseCommand):
         except ImportError:
             error = traceback.format_exc()
             self.stdout.write('ERROR: Make sure these are valid cron class names: %s\n\n%s' % (cron_class_names, error))
+            try:
+                emails = [admin[1] for admin in settings.ADMINS]
+                failed_runs_cronjob_email_prefix = getattr(settings, 'FAILED_RUNS_CRONJOB_EMAIL_PREFIX', '')
+                send_mail(
+                    "URGENT!!! {} Error while importing crons".format(failed_runs_cronjob_email_prefix),
+                    error,
+                    settings.DEFAULT_FROM_EMAIL, emails
+                )
+            except Exception as e:
+                self.stdout.write(
+                    'ERROR: While sending email: %s' % (e))
             return
 
         for cron_class in crons_to_run:
