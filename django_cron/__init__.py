@@ -194,6 +194,7 @@ class CronJobManager(object):
             logger.error("%s cronjob error:\n%s" % (cron_log.code, cron_log.message))
         
         if self.send_error_email and not cron_log.is_success:
+            from django_cron.models import CronJobLog
             try:
                 emails = [admin[1] for admin in settings.ADMINS]
                 if getattr(cron_job, "SEND_FAILED_EMAIL", []):
@@ -201,15 +202,22 @@ class CronJobManager(object):
                 
                 failed_runs_cronjob_email_prefix = getattr(settings, 'FAILED_RUNS_CRONJOB_EMAIL_PREFIX', '')
                 min_failures = getattr(cron_job, 'MIN_NUM_FAILURES', 10)
-                send_mail(
-                    '%s%s failed %s times in a row!' % (
-                        failed_runs_cronjob_email_prefix,
-                        cron_log.code,
-                        min_failures,
-                    ),
-                    cron_log.message,
-                    settings.DEFAULT_FROM_EMAIL, emails
-                )
+                if not min_failures:
+                    min_failures = 10
+
+                last_min_cron_status = list(CronJobLog.objects.using("default").filter(
+                        code=cron_log.code).order_by("-end_time").values_list("is_success", flat=True)[:min_failures])
+
+                if not any(last_min_cron_status):
+                    send_mail(
+                        '%s%s failed %s times in a row!' % (
+                            failed_runs_cronjob_email_prefix,
+                            cron_log.code,
+                            min_failures,
+                        ),
+                        cron_log.message,
+                        settings.DEFAULT_FROM_EMAIL, emails
+                    )
             except Exception as e:
                 logger.exception(e)
 
