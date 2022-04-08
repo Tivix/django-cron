@@ -65,6 +65,7 @@ class Command(BaseCommand):
         try:
             crons_to_run = [get_class(x) for x in cron_class_names]
         except ImportError:
+            # Send an email to admin when the module load fails
             error = traceback.format_exc()
             self.stdout.write('ERROR: Make sure these are valid cron class names: %s\n\n%s' % (cron_class_names, error))
             try:

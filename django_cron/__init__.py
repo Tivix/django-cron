@@ -208,6 +208,8 @@ class CronJobManager(object):
                 last_min_cron_status = list(CronJobLog.objects.using("default").filter(
                         code=cron_log.code).order_by("-end_time").values_list("is_success", flat=True)[:min_failures])
 
+                #All of them should be failed ie false. Then only we have to send email
+                # Send on 3 failures. [True, False, False] ie [success, failed, failed] does not trigger email
                 if not any(last_min_cron_status):
                     send_mail(
                         '%s%s failed %s times in a row!' % (
