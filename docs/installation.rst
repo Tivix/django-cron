@@ -69,3 +69,9 @@ Installation
         $ python manage.py runcrons --silent
 
 
+  IV. run jobs multiple times ``python manage.py runcrons``, for example: ::
+
+        # run crons, 2 times, waiting between runs 10 seconds
+        $ python manage.py runcrons --repeat 2 --sleep 10
+  You may also run only chosen cron jobs ``python manage.py runcrons cron_class ...``
+  Without ``repeat`` it will run as long as user stops it with keyboard interruption.
