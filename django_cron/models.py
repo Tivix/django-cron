@@ -19,6 +19,9 @@ class CronJobLog(models.Model):
     def __unicode__(self):
         return '%s (%s)' % (self.code, 'Success' if self.is_success else 'Fail')
 
+    def __str__(self):
+        return "%s (%s)" % (self.code, "Success" if self.is_success else "Fail")
+
     class Meta:
         index_together = [
             ('code', 'is_success', 'ran_at_time'),
