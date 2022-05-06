@@ -55,6 +55,7 @@ class TestRunCrons(TransactionTestCase):
     does_not_exist_cron = 'ThisCronObviouslyDoesntExist'
     no_code_cron = 'test_crons.NoCodeCronJob'
     test_failed_runs_notification_cron = 'django_cron.cron.FailedRunsNotificationCronJob'
+    run_on_month_days = 'test_crons.RunOnMonthDaysCronJob'
 
     def _call(self, *args, **kwargs):
         return call('runcrons', *args, **kwargs)
@@ -169,7 +170,20 @@ class TestRunCrons(TransactionTestCase):
             with freeze_time(test_date):
                 call_command('runcrons', self.run_on_wkend_cron)
             self.assertEqual(CronJobLog.objects.all().count(), logs_count)
-            
+
+    def test_run_on_month_days(self):
+        for test_date in ("2010-10-1", "2010-10-10", "2010-10-20"):
+            logs_count = CronJobLog.objects.all().count()
+            with freeze_time(test_date):
+                call_command('runcrons', self.run_on_month_days)
+            self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
+
+        for test_date in ("2010-10-2", "2010-10-9", "2010-10-11", "2010-10-19", "2010-10-21"):
+            logs_count = CronJobLog.objects.all().count()
+            with freeze_time(test_date):
+                call_command('runcrons', self.run_on_month_days)
+            self.assertEqual(CronJobLog.objects.all().count(), logs_count)
+
     def test_silent_produces_no_output_success(self):
         response = self._call(self.success_cron, silent=True)
         self.assertEqual(1, CronJobLog.objects.count())
