@@ -6,6 +6,7 @@ try:
     from setuptools.command.test import test
 except ImportError:
     from ez_setup import use_setuptools
+
     use_setuptools()
     from setuptools import setup, find_packages
     from setuptools.command.test import test
@@ -13,7 +14,7 @@ import os
 
 
 here = os.path.dirname(os.path.abspath(__file__))
-f = open(os.path.join(here,  'README.rst'))
+f = open(os.path.join(here, 'README.rst'))
 long_description = f.read().strip()
 f.close()
 
@@ -28,10 +29,7 @@ setup(
     long_description=long_description,
     keywords='django cron',
     zip_safe=False,
-    install_requires=[
-        'Django>=1.8.0',
-        'django-common-helpers>=0.6.4'
-    ],
+    install_requires=['Django>=1.8.0', 'django-common-helpers>=0.6.4'],
     test_suite='runtests.runtests',
     include_package_data=True,
     classifiers=[
@@ -39,6 +37,6 @@ setup(
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'Operating System :: OS Independent',
-        'Topic :: Software Development'
-    ]
+        'Topic :: Software Development',
+    ],
 )
