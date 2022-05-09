@@ -1,3 +1,5 @@
+import datetime
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
@@ -23,3 +25,16 @@ class EmailUserCountCronJob(CronJobBase):
             'no-reply@django-cron-demo.com',
             ['test@django-cron-demo.com']
         )
+
+
+class WriteDateToFileCronJob(CronJobBase):
+    """
+    Write current date to file.
+    """
+    schedule = Schedule(run_at_times=["12:20", "12:25"], retry_after_failure_mins=1)
+    code = 'cron.WriteDateToFileCronJob'
+
+    def do(self):
+        message = f"Current date: {datetime.datetime.now()} \n"
+        with open("cron-demo.txt", "w") as myfile:
+            myfile.write(message)

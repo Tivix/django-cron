@@ -125,6 +125,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 CRON_CLASSES = [
     "demo.cron.EmailUserCountCronJob",
+    "demo.cron.WriteDateToFileCronJob",
 ]
 # If you want to test django locking with database
 # DJANGO_CRON_LOCK_BACKEND = "django_cron.backends.lock.database.DatabaseLock"
