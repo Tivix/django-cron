@@ -55,6 +55,15 @@ You can also mix up both of these methods:
         schedule = Schedule(run_every_mins=RUN_EVERY_MINS, run_at_times=RUN_AT_TIMES)
 
 This will run job every 2h plus one run at 6:30.
+Run monthly feature
+--------------------
+You can set your job to run every month at particular day, for example at the 1st and 10th day of month.
+.. code-block:: python
+
+    class MyCronJob(CronJobBase):
+        RUN_AT_TIMES = ['6:00']
+        RUN_MONTHLY_ON_DAYS = [1, 10]
+        schedule = Schedule(run_monthly_on_days=RUN_MONTHLY_ON_DAYS, run_at_times=RUN_AT_TIMES)
 
 Allowing parallels runs
 -----------------------
