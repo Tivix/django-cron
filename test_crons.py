@@ -43,13 +43,18 @@ class Wait3secCronJob(CronJobBase):
         sleep(3)
 
 
-
 class RunOnWeekendCronJob(CronJobBase):
     code = 'run_on_weekend'
-    schedule = Schedule(run_on_days=[5,6], run_at_times=['0:00',])
+    schedule = Schedule(
+        run_on_days=[5, 6],
+        run_at_times=[
+            '0:00',
+        ],
+    )
 
     def do(self):
         pass
+
 
 class NoCodeCronJob(CronJobBase):
     def do(self):
@@ -58,7 +63,12 @@ class NoCodeCronJob(CronJobBase):
 
 class RunOnMonthDaysCronJob(CronJobBase):
     code = 'run_on_month_days'
-    schedule = Schedule(run_monthly_on_days=[1, 10, 20], run_at_times=['0:00', ])
+    schedule = Schedule(
+        run_monthly_on_days=[1, 10, 20],
+        run_at_times=[
+            '0:00',
+        ],
+    )
 
     def do(self):
         pass
