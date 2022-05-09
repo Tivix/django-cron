@@ -54,7 +54,9 @@ class TestRunCrons(TransactionTestCase):
     run_on_wkend_cron = 'test_crons.RunOnWeekendCronJob'
     does_not_exist_cron = 'ThisCronObviouslyDoesntExist'
     no_code_cron = 'test_crons.NoCodeCronJob'
-    test_failed_runs_notification_cron = 'django_cron.cron.FailedRunsNotificationCronJob'
+    test_failed_runs_notification_cron = (
+        'django_cron.cron.FailedRunsNotificationCronJob'
+    )
     run_on_month_days = 'test_crons.RunOnMonthDaysCronJob'
 
     def _call(self, *args, **kwargs):
@@ -99,13 +101,17 @@ class TestRunCrons(TransactionTestCase):
         self.assertIn('does not have a code attribute', response)
         mock_logger.info.assert_called()
 
-    @override_settings(DJANGO_CRON_LOCK_BACKEND='django_cron.backends.lock.file.FileLock')
+    @override_settings(
+        DJANGO_CRON_LOCK_BACKEND='django_cron.backends.lock.file.FileLock'
+    )
     def test_file_locking_backend(self):
         logs_count = CronJobLog.objects.all().count()
         self._call(self.success_cron, force=True)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
-    @override_settings(DJANGO_CRON_LOCK_BACKEND='django_cron.backends.lock.database.DatabaseLock')
+    @override_settings(
+        DJANGO_CRON_LOCK_BACKEND='django_cron.backends.lock.database.DatabaseLock'
+    )
     def test_database_locking_backend(self):
         # TODO: to test it properly we would need to run multiple jobs at the same time
         logs_count = CronJobLog.objects.all().count()
@@ -131,7 +137,9 @@ class TestRunCrons(TransactionTestCase):
         mock_do.assert_called_once()
         self.assertEqual(1, CronJobLog.objects.count())
         log = CronJobLog.objects.get()
-        self.assertEqual('message', log.message.strip())  # CronJobManager adds new line at the end of each message
+        self.assertEqual(
+            'message', log.message.strip()
+        )  # CronJobManager adds new line at the end of each message
         self.assertTrue(log.is_success)
 
     def test_runs_every_mins(self):
@@ -170,13 +178,19 @@ class TestRunCrons(TransactionTestCase):
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 2)
 
     def test_run_on_weekend(self):
-        for test_date in ("2017-06-17", "2017-06-18"): # Saturday and Sunday
+        for test_date in ("2017-06-17", "2017-06-18"):  # Saturday and Sunday
             logs_count = CronJobLog.objects.all().count()
             with freeze_time(test_date):
                 call_command('runcrons', self.run_on_wkend_cron)
             self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
-        for test_date in ("2017-06-19", "2017-06-20", "2017-06-21", "2017-06-22", "2017-06-23"): # Mon-Fri
+        for test_date in (
+            "2017-06-19",
+            "2017-06-20",
+            "2017-06-21",
+            "2017-06-22",
+            "2017-06-23",
+        ):  # Mon-Fri
             logs_count = CronJobLog.objects.all().count()
             with freeze_time(test_date):
                 call_command('runcrons', self.run_on_wkend_cron)
@@ -189,7 +203,13 @@ class TestRunCrons(TransactionTestCase):
                 call_command('runcrons', self.run_on_month_days)
             self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
-        for test_date in ("2010-10-2", "2010-10-9", "2010-10-11", "2010-10-19", "2010-10-21"):
+        for test_date in (
+            "2010-10-2",
+            "2010-10-9",
+            "2010-10-11",
+            "2010-10-19",
+            "2010-10-21",
+        ):
             logs_count = CronJobLog.objects.all().count()
             with freeze_time(test_date):
                 call_command('runcrons', self.run_on_month_days)
@@ -217,11 +237,7 @@ class TestRunCrons(TransactionTestCase):
 
     def test_admin(self):
         password = 'test'
-        user = User.objects.create_superuser(
-            'test',
-            'test@tivix.com',
-            password
-        )
+        user = User.objects.create_superuser('test', 'test@tivix.com', password)
         self.client = Client()
         self.client.login(username=user.username, password=password)
 
@@ -283,17 +299,17 @@ class TestRunCrons(TransactionTestCase):
 
     def test_humanize_duration(self):
         test_subjects = (
-            (timedelta(days=1, hours=1, minutes=1, seconds=1), '1 day, 1 hour, 1 minute, 1 second'),
+            (
+                timedelta(days=1, hours=1, minutes=1, seconds=1),
+                '1 day, 1 hour, 1 minute, 1 second',
+            ),
             (timedelta(days=2), '2 days'),
             (timedelta(days=15, minutes=4), '15 days, 4 minutes'),
             (timedelta(), '< 1 second'),
         )
 
         for duration, humanized in test_subjects:
-            self.assertEqual(
-                humanize_duration(duration),
-                humanized
-            )
+            self.assertEqual(humanize_duration(duration), humanized)
 
 
 class TestCronLoop(TransactionTestCase):
@@ -307,5 +323,7 @@ class TestCronLoop(TransactionTestCase):
 
     def test_repeat_twice(self):
         logs_count = CronJobLog.objects.all().count()
-        self._call(cron_classes=[self.success_cron, self.success_cron], repeat=2, sleep=1)
+        self._call(
+            cron_classes=[self.success_cron, self.success_cron], repeat=2, sleep=1
+        )
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 4)
