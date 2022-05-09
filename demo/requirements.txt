@@ -1,3 +1,2 @@
-Django==2.2.20
-django-common-helpers>=0.7,<0.7.99
+Django==4.0.4
 -e ../
