@@ -110,18 +110,18 @@ class TestRunCrons(TransactionTestCase):
         self._call(self.success_cron, force=True)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
-    # @override_settings(
-    #     DJANGO_CRON_LOCK_BACKEND='django_cron.backends.lock.database.DatabaseLock'
-    # )
-    # def test_database_locking_backend(self):
-    #     # TODO: to test it properly we would need to run multiple jobs at the same time
-    #     logs_count = CronJobLog.objects.all().count()
-    #     cron_job_locks = CronJobLock.objects.all().count()
-    #     for _ in range(3):
-    #         call(self.success_cron, force=True)
-    #     self.assertEqual(CronJobLog.objects.all().count(), logs_count + 3)
-    #     self.assertEqual(CronJobLock.objects.all().count(), cron_job_locks + 1)
-    #     self.assertEqual(CronJobLock.objects.first().locked, False)
+    @override_settings(
+        DJANGO_CRON_LOCK_BACKEND='django_cron.backends.lock.database.DatabaseLock'
+    )
+    def test_database_locking_backend(self):
+        # TODO: to test it properly we would need to run multiple jobs at the same time
+        logs_count = CronJobLog.objects.all().count()
+        cron_job_locks = CronJobLock.objects.all().count()
+        for _ in range(3):
+            self._call(self.success_cron, force=True)
+        self.assertEqual(CronJobLog.objects.all().count(), logs_count + 3)
+        self.assertEqual(CronJobLock.objects.all().count(), cron_job_locks + 1)
+        self.assertEqual(CronJobLock.objects.first().locked, False)
 
     @patch.object(test_crons.TestSuccessCronJob, 'do')
     def test_dry_run_does_not_perform_task(self, mock_do):
