@@ -27,7 +27,7 @@ jobs:
         pip install .
     - name: Install Test Dependencies
       run: |
-        pip install -r test_requirements.pip
+        pip install -r test_requirements.txt
     - name: Run Tests
       run: |
         python runtests.py runtests
