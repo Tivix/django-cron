@@ -64,13 +64,16 @@ Run monthly feature
 --------------------
 ``run_monthly_on_days`` specifies the day of the month on which the job should be run.
 
-You can set your job to run every month at particular day, for example at the 1st and 10th day of month.
+You have to combine ``run_monthly_on_days`` with  ``run_at_times`` or ``run_every_mins``.
+
+You can set your job to run every month at particular day, for example at 6:30 on the 1st and 10th day of month.
 
 .. code-block:: python
 
     class MyCronJob(CronJobBase):
         RUN_MONTHLY_ON_DAYS = [1, 10]
-        schedule = Schedule(run_monthly_on_days=RUN_MONTHLY_ON_DAYS)
+        RUN_AT_TIMES = ['6:30']
+        schedule = Schedule(run_monthly_on_days=RUN_MONTHLY_ON_DAYS, run_at_times=RUN_AT_TIMES)
 
 Run weekly feature
 --------------------
@@ -78,13 +81,16 @@ Run weekly feature
 
 Days of the week are numbered from 0 to 6 where 0 is Monday and 6 is Sunday.
 
-You can set your job to run every week at particular day, for example at Saturday and Sunday.
+You have to combine ``run_weekly_on_days`` with  ``run_at_times`` or ``run_every_mins``.
+
+You can set your job to run every week at particular day, for example at Saturday and Sunday at 6:30.
 
 .. code-block:: python
 
     class MyCronJob(CronJobBase):
         RUN_WEEKLY_ON_DAYS = [0, 6]
-        schedule = Schedule(run_weekly_on_days=RUN_WEEKLY_ON_DAYS)
+        RUN_AT_TIMES = ['6:30']
+        schedule = Schedule(run_weekly_on_days=RUN_WEEKLY_ON_DAYS, run_at_times=RUN_AT_TIMES)
 
 Allowing parallels runs
 -----------------------
