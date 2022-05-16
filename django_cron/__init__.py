@@ -47,7 +47,7 @@ class Schedule(object):
         run_every_mins=None,
         run_at_times=None,
         retry_after_failure_mins=None,
-        run_on_days=None,
+        run_weekly_on_days=None,
         run_monthly_on_days=None,
     ):
         if run_at_times is None:
@@ -55,7 +55,7 @@ class Schedule(object):
         self.run_every_mins = run_every_mins
         self.run_at_times = run_at_times
         self.retry_after_failure_mins = retry_after_failure_mins
-        self.run_on_days = run_on_days
+        self.run_weekly_on_days = run_weekly_on_days
         self.run_monthly_on_days = run_monthly_on_days
 
 
@@ -130,8 +130,8 @@ class CronJobManager(object):
             if not datetime.today().day in cron_job.schedule.run_monthly_on_days:
                 return False
 
-        if cron_job.schedule.run_on_days is not None:
-            if not datetime.today().weekday() in cron_job.schedule.run_on_days:
+        if cron_job.schedule.run_weekly_on_days is not None:
+            if not datetime.today().weekday() in cron_job.schedule.run_weekly_on_days:
                 return False
 
         if cron_job.schedule.retry_after_failure_mins:
