@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 
 def humanize_duration(duration):
@@ -20,9 +20,13 @@ def humanize_duration(duration):
         parts.append(u'%s %s' % (hours, _('hour') if hours == 1 else _('hours')))
 
     if minutes > 0:
-        parts.append(u'%s %s' % (minutes, _('minute') if minutes == 1 else _('minutes')))
+        parts.append(
+            u'%s %s' % (minutes, _('minute') if minutes == 1 else _('minutes'))
+        )
 
     if seconds > 0:
-        parts.append(u'%s %s' % (seconds, _('second') if seconds == 1 else _('seconds')))
+        parts.append(
+            u'%s %s' % (seconds, _('second') if seconds == 1 else _('seconds'))
+        )
 
     return ' '.join(parts) if len(parts) != 0 else _('< 1 second')

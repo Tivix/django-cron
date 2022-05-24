@@ -21,3 +21,7 @@ def runtests():
         django.setup()
     failures = test_runner.run_tests(['django_cron'])
     sys.exit(bool(failures))
+
+
+if __name__ == '__main__':
+    globals()[sys.argv[1]]()

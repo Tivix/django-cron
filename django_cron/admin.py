@@ -2,9 +2,10 @@ from datetime import timedelta
 
 from django.contrib import admin
 from django.db.models import DurationField, ExpressionWrapper, F
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from django_cron.models import CronJobLog
+
+from django_cron.models import CronJobLog, CronJobLock
 from django_cron.helpers import humanize_duration
 
 
@@ -59,3 +60,4 @@ class CronJobLogAdmin(admin.ModelAdmin):
 
 
 admin.site.register(CronJobLog, CronJobLogAdmin)
+admin.site.register(CronJobLock)

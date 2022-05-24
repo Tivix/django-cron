@@ -58,3 +58,6 @@ db.sqlite3
 
 # IntelliJ IDE files
 .idea
+
+# Vim
+*.swp
