@@ -37,8 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    'django_cron'
+    'django_cron',
 ]
 
 MIDDLEWARE = [
@@ -47,7 +46,6 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -125,5 +123,8 @@ STATIC_URL = '/static/'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 CRON_CLASSES = [
-    "demo.cron.EmailUsercountCronJob",
+    "demo.cron.EmailUserCountCronJob",
+    "demo.cron.WriteDateToFileCronJob",
 ]
+# If you want to test django locking with database
+# DJANGO_CRON_LOCK_BACKEND = "django_cron.backends.lock.database.DatabaseLock"

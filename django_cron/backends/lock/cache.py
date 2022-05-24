@@ -10,10 +10,11 @@ class CacheLock(DjangoCronJobLock):
     One of simplest lock backends, uses django cache to
     prevent parallel runs of commands.
     """
+
     DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
 
     def __init__(self, cron_class, *args, **kwargs):
-        super(CacheLock, self).__init__(cron_class, *args, **kwargs)
+        super().__init__(cron_class, *args, **kwargs)
 
         self.cache = self.get_cache_by_name()
         self.lock_name = self.get_lock_name()
@@ -35,12 +36,10 @@ class CacheLock(DjangoCronJobLock):
     def lock_failed_message(self):
         started = self.get_running_lock_date()
         msgs = [
-            "%s: lock has been found. Other cron started at %s" % (
-                self.job_name, started
-            ),
-            "Current timeout for job %s is %s seconds (cache key name is '%s')." % (
-                self.job_name, self.timeout, self.lock_name
-            )
+            "%s: lock has been found. Other cron started at %s"
+            % (self.job_name, started),
+            "Current timeout for job %s is %s seconds (cache key name is '%s')."
+            % (self.job_name, self.timeout, self.lock_name),
         ]
         return msgs
 
@@ -48,7 +47,8 @@ class CacheLock(DjangoCronJobLock):
         """
         Gets a specified cache (or the `default` cache if CRON_CACHE is not set)
         """
-        cache_name = getattr(settings, 'DJANGO_CRON_CACHE', 'default')
+        default_cache = "default"
+        cache_name = getattr(settings, "DJANGO_CRON_CACHE", default_cache)
 
         # Allow the possible InvalidCacheBackendError to happen here
         # instead of allowing unexpected parallel runs of cron jobs
@@ -58,11 +58,12 @@ class CacheLock(DjangoCronJobLock):
         return self.job_name
 
     def get_cache_timeout(self, cron_class):
-        timeout = self.DEFAULT_LOCK_TIME
         try:
-            timeout = getattr(cron_class, 'DJANGO_CRON_LOCK_TIME', settings.DJANGO_CRON_LOCK_TIME)
+            timeout = getattr(
+                cron_class, 'DJANGO_CRON_LOCK_TIME', settings.DJANGO_CRON_LOCK_TIME
+            )
         except:
-            pass
+            timeout = self.DEFAULT_LOCK_TIME
         return timeout
 
     def get_running_lock_date(self):
