@@ -279,6 +279,7 @@ class CronJobManager(object):
                         cron_job_class.__name__,
                         self.cron_job.code,
                     )
+                    self.make_log('Job in progress', success=True)
                     self.msg = self.cron_job.do()
                     self.make_log(self.msg, success=True)
                     self.cron_job.set_prev_success_cron(
