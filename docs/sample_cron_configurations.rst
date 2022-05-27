@@ -27,18 +27,17 @@ You can run cron by passing ``run_every_mins`` or ``run_at_times`` params.
 This will run job every hour:
 
 .. code-block:: python
-
     class MyCronJob(CronJobBase):
         RUN_EVERY_MINS = 60 # every hours
 
         schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
+
 
 ``run_at_times`` determines the exact start time of the job.
 
 This will run job at given hours:
 
 .. code-block:: python
-
     class MyCronJob(CronJobBase):
         RUN_AT_TIMES = ['11:30', '14:00', '23:15']
 
@@ -51,7 +50,6 @@ the ``TIME_ZONE`` setting.
 You can also mix up both of these methods:
 
 .. code-block:: python
-
     class MyCronJob(CronJobBase):
         RUN_EVERY_MINS = 120 # every 2 hours
         RUN_AT_TIMES = ['6:30']
@@ -69,7 +67,6 @@ You have to combine ``run_monthly_on_days`` with  ``run_at_times`` or ``run_ever
 You can set your job to run every month at particular day, for example at 6:30 on the 1st and 10th day of month.
 
 .. code-block:: python
-
     class MyCronJob(CronJobBase):
         RUN_MONTHLY_ON_DAYS = [1, 10]
         RUN_AT_TIMES = ['6:30']
@@ -86,11 +83,34 @@ You have to combine ``run_weekly_on_days`` with  ``run_at_times`` or ``run_every
 You can set your job to run every week at particular day, for example at Saturday and Sunday at 6:30.
 
 .. code-block:: python
-
     class MyCronJob(CronJobBase):
         RUN_WEEKLY_ON_DAYS = [0, 6]
         RUN_AT_TIMES = ['6:30']
         schedule = Schedule(run_weekly_on_days=RUN_WEEKLY_ON_DAYS, run_at_times=RUN_AT_TIMES)
+
+
+Run tolerance feature
+---------------------
+
+You can specify ``RUN_TOLERANCE_SECONDS`` param.
+
+This parameter specifies a time window to run the job.
+
+For example, consider a job that runs every 5 minutes and last time it was run at 00:00:00. For example, ``runcrons`` command
+gets called every five minutes starting from 00:00:00.
+
+Without this parameter, the job will be run next time at 00:10:00.
+
+If ``RUN_TOLERANCE_SECONDS`` is set to non-zero value, the job will be run next time at 00:05:00. That makes job run period
+more precise.
+
+Usage example:
+
+.. code-block:: python
+    class MyCronJob(CronJobBase):
+        RUN_EVERY_MINS = 5
+        schedule = Schedule(run_every_mins=RUN_EVERY_MINS, run_tolerance_seconds=RUN_TOLERANCE_SECONDS)
+
 
 Allowing parallels runs
 -----------------------
@@ -99,7 +119,6 @@ By default parallels runs are not allowed (for security reasons). However if you
 want enable them just add:
 
 .. code-block:: python
-
     ALLOW_PARALLEL_RUNS = True
 
 in your CronJob class.
@@ -110,7 +129,6 @@ in your CronJob class.
 If you wish to override which cache is used, put this in your settings file:
 
 .. code-block:: python
-
     DJANGO_CRON_CACHE = 'cron_cache'
 
 
