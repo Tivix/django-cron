@@ -50,6 +50,7 @@ class TestRunCrons(TransactionTestCase):
     success_cron = 'test_crons.TestSuccessCronJob'
     error_cron = 'test_crons.TestErrorCronJob'
     five_mins_cron = 'test_crons.Test5minsCronJob'
+    five_mins_with_tolerance_cron = 'test_crons.Test5minsWithToleranceCronJob'
     run_at_times_cron = 'test_crons.TestRunAtTimesCronJob'
     wait_3sec_cron = 'test_crons.Wait3secCronJob'
     run_on_wkend_cron = 'test_crons.RunOnWeekendCronJob'
@@ -161,6 +162,31 @@ class TestRunCrons(TransactionTestCase):
         self.assertReportedRun(test_crons.Test5minsCronJob, response)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count + 2)
 
+    def test_runs_every_mins_with_tolerance(self):
+        with freeze_time("2014-01-01 00:00:00"):
+            call_command('runcrons', self.five_mins_with_tolerance_cron)
+        self.assertEqual(CronJobLog.objects.all().count(), 1)
+
+        with freeze_time("2014-01-01 00:04:59"):
+            call_command('runcrons', self.five_mins_with_tolerance_cron)
+        self.assertEqual(CronJobLog.objects.all().count(), 2)
+
+        with freeze_time("2014-01-01 00:05:01"):
+            call_command('runcrons', self.five_mins_with_tolerance_cron)
+        self.assertEqual(CronJobLog.objects.all().count(), 2)
+
+        with freeze_time("2014-01-01 00:09:40"):
+            call_command('runcrons', self.five_mins_with_tolerance_cron)
+        self.assertEqual(CronJobLog.objects.all().count(), 2)
+
+        with freeze_time("2014-01-01 00:09:54"):
+            call_command('runcrons', self.five_mins_with_tolerance_cron)
+        self.assertEqual(CronJobLog.objects.all().count(), 2)
+
+        with freeze_time("2014-01-01 00:09:55"):
+            call_command('runcrons', self.five_mins_with_tolerance_cron)
+        self.assertEqual(CronJobLog.objects.all().count(), 3)
+
     def test_runs_at_time(self):
         logs_count = CronJobLog.objects.all().count()
         with freeze_time("2014-01-01 00:00:01"):
@@ -186,11 +212,11 @@ class TestRunCrons(TransactionTestCase):
             self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
         for test_date in (
-            "2017-06-19",
-            "2017-06-20",
-            "2017-06-21",
-            "2017-06-22",
-            "2017-06-23",
+                "2017-06-19",
+                "2017-06-20",
+                "2017-06-21",
+                "2017-06-22",
+                "2017-06-23",
         ):  # Mon-Fri
             logs_count = CronJobLog.objects.all().count()
             with freeze_time(test_date):
@@ -205,11 +231,11 @@ class TestRunCrons(TransactionTestCase):
             self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
         for test_date in (
-            "2010-10-2",
-            "2010-10-9",
-            "2010-10-11",
-            "2010-10-19",
-            "2010-10-21",
+                "2010-10-2",
+                "2010-10-9",
+                "2010-10-11",
+                "2010-10-19",
+                "2010-10-21",
         ):
             logs_count = CronJobLog.objects.all().count()
             with freeze_time(test_date):
