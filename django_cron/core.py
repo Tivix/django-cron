@@ -27,6 +27,7 @@ class Schedule(object):
             retry_after_failure_mins=None,
             run_weekly_on_days=None,
             run_monthly_on_days=None,
+            run_tolerance_seconds=0,
     ):
         if run_at_times is None:
             run_at_times = []
@@ -35,6 +36,7 @@ class Schedule(object):
         self.retry_after_failure_mins = retry_after_failure_mins
         self.run_weekly_on_days = run_weekly_on_days
         self.run_monthly_on_days = run_monthly_on_days
+        self.run_tolerance_seconds = run_tolerance_seconds
 
 
 class CronJobBase(object):
@@ -122,7 +124,7 @@ class CronJobManager(object):
             if (
                     last_job
                     and not last_job.is_success
-                    and get_current_time()
+                    and get_current_time() + timedelta(seconds=cron_job.schedule.run_tolerance_seconds)
                     <= last_job.start_time
                     + timedelta(minutes=cron_job.schedule.retry_after_failure_mins)
             ):
@@ -138,7 +140,7 @@ class CronJobManager(object):
 
             if self.previously_ran_successful_cron:
                 if (
-                        get_current_time()
+                        get_current_time() + timedelta(seconds=cron_job.schedule.run_tolerance_seconds)
                         > self.previously_ran_successful_cron.start_time
                         + timedelta(minutes=cron_job.schedule.run_every_mins)
                 ):
