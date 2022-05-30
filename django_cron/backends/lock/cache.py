@@ -10,7 +10,6 @@ class CacheLock(DjangoCronJobLock):
     One of simplest lock backends, uses django cache to
     prevent parallel runs of commands.
     """
-
     DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
 
     def __init__(self, cron_class, *args, **kwargs):
@@ -36,10 +35,12 @@ class CacheLock(DjangoCronJobLock):
     def lock_failed_message(self):
         started = self.get_running_lock_date()
         msgs = [
-            "%s: lock has been found. Other cron started at %s"
-            % (self.job_name, started),
-            "Current timeout for job %s is %s seconds (cache key name is '%s')."
-            % (self.job_name, self.timeout, self.lock_name),
+            "%s: lock has been found. Other cron started at %s" % (
+                self.job_name, started
+            ),
+            "Current timeout for job %s is %s seconds (cache key name is '%s')." % (
+                self.job_name, self.timeout, self.lock_name
+            )
         ]
         return msgs
 
@@ -59,9 +60,7 @@ class CacheLock(DjangoCronJobLock):
 
     def get_cache_timeout(self, cron_class):
         try:
-            timeout = getattr(
-                cron_class, 'DJANGO_CRON_LOCK_TIME', settings.DJANGO_CRON_LOCK_TIME
-            )
+            timeout = getattr(cron_class, 'DJANGO_CRON_LOCK_TIME', settings.DJANGO_CRON_LOCK_TIME)
         except:
             timeout = self.DEFAULT_LOCK_TIME
         return timeout

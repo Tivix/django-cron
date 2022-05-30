@@ -8,6 +8,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.sitemaps',
     'django.contrib.staticfiles',
+
     'django_cron',
 ]
 
@@ -20,13 +21,13 @@ CRON_CLASSES = [
     'test_crons.Test5minsCronJob',
     'test_crons.TestRunAtTimesCronJob',
     'test_crons.Wait3secCronJob',
-    'django_cron.cron.FailedRunsNotificationCronJob',
+    'django_cron.cron.FailedRunsNotificationCronJob'
 ]
 
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware'
 ]
 
 LOGGING = {
@@ -44,7 +45,7 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
-    },
+    }
 }
 
 CACHES = {
