@@ -11,6 +11,7 @@ class DjangoCronJobLock(object):
     except DjangoCronJobLock.LockFailedException:
         pass
     """
+
     class LockFailedException(Exception):
         pass
 

@@ -10,6 +10,7 @@ class FileLock(DjangoCronJobLock):
     """
     Quite a simple lock backend that uses kernel based locking
     """
+
     __lock_fd = None
 
     def lock(self):
