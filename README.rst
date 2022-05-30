@@ -1,9 +1,4 @@
 ===========
-Deprecated
-===========
-This project is no longer maintained.
-
-===========
 django-cron
 ===========
 
