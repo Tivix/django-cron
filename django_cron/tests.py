@@ -96,7 +96,7 @@ class TestRunCrons(TransactionTestCase):
         self.assertIn(self.does_not_exist_cron, response)
         self.assertEqual(CronJobLog.objects.all().count(), logs_count)
 
-    @patch('django_cron.logger')
+    @patch('django_cron.core.logger')
     def test_requires_code(self, mock_logger):
         response = self._call(self.no_code_cron, force=True)
         self.assertIn('does not have a code attribute', response)
