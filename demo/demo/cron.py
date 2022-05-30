@@ -1,18 +1,18 @@
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.mail import send_mail
 
-from django_common.helper import send_mail
 from django_cron import CronJobBase, Schedule
 
 
-class EmailUsercountCronJob(CronJobBase):
+class EmailUserCountCronJob(CronJobBase):
     """
     Send an email with the user count.
     """
     RUN_EVERY_MINS = 0 if settings.DEBUG else 360   # 6 hours when not DEBUG
 
     schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
-    code = 'cron.EmailUsercountCronJob'
+    code = 'cron.EmailUserCountCronJob'
 
     def do(self):
         message = 'Active users: %d' % User.objects.count()
