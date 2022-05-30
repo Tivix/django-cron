@@ -1,5 +1,26 @@
 Changelog
 =========
+0.6.0
+------
+
+    - Update requirements to Django 3.2.0 (long-term support)
+
+    - Django 4.0 fixes
+
+    - Removed message length limit to reflect database
+
+    - Locking backend with database
+
+    - Name locks by module_name.class_name for higher distinction
+
+    - Run CronJobs on days in month/ monthly
+
+    - Command for making cron jobs running in loop or running several times with the sleep time between
+
+    - New features: Run cron on specific days and output errors to a specified log
+
+    - Add cron feedback and dry-run functionality
+
 0.5.1
 ------
 

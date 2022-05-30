@@ -38,7 +38,7 @@ jobs:
 install:
   - pip install -q Django==$DJANGO
   - pip install coveralls
-  - pip install -r test_requirements.pip
+  - pip install -r test_requirements.txt
 script:
   - flake8 . --config=flake8
   - coverage run --source=django_cron setup.py test
