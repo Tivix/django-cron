@@ -80,3 +80,12 @@ class RunOnMonthDaysCronJob(CronJobBase):
 
     def do(self):
         pass
+
+
+class RunEveryMinuteAndRemoveOldLogs(CronJobBase):
+    code = 'run_and_remove_old_logs'
+    schedule = Schedule(run_every_mins=1)
+    remove_successful_cron_logs = True
+
+    def do(self):
+        pass

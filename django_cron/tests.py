@@ -1,3 +1,4 @@
+import datetime
 import threading
 from time import sleep
 from datetime import timedelta
@@ -60,6 +61,7 @@ class TestRunCrons(TransactionTestCase):
         'django_cron.cron.FailedRunsNotificationCronJob'
     )
     run_on_month_days = 'test_crons.RunOnMonthDaysCronJob'
+    run_and_remove_old_logs = 'test_crons.RunEveryMinuteAndRemoveOldLogs'
 
     def _call(self, *args, **kwargs):
         return call('runcrons', *args, **kwargs)
@@ -204,11 +206,11 @@ class TestRunCrons(TransactionTestCase):
             self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
         for test_date in (
-            "2017-06-19",
-            "2017-06-20",
-            "2017-06-21",
-            "2017-06-22",
-            "2017-06-23",
+                "2017-06-19",
+                "2017-06-20",
+                "2017-06-21",
+                "2017-06-22",
+                "2017-06-23",
         ):  # Mon-Fri
             logs_count = CronJobLog.objects.all().count()
             with freeze_time(test_date):
@@ -223,11 +225,11 @@ class TestRunCrons(TransactionTestCase):
             self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
         for test_date in (
-            "2010-10-2",
-            "2010-10-9",
-            "2010-10-11",
-            "2010-10-19",
-            "2010-10-21",
+                "2010-10-2",
+                "2010-10-9",
+                "2010-10-11",
+                "2010-10-19",
+                "2010-10-21",
         ):
             logs_count = CronJobLog.objects.all().count()
             with freeze_time(test_date):
@@ -328,6 +330,14 @@ class TestRunCrons(TransactionTestCase):
 
         for duration, humanized in test_subjects:
             self.assertEqual(humanize_duration(duration), humanized)
+
+    def test_remove_old_succeeded_job_logs(self):
+        mock_date = datetime.datetime(2022, 5, 1, 12, 0, 0)
+        for _ in range(5):
+            with freeze_time(mock_date):
+                call_command('runcrons', self.run_and_remove_old_logs)
+            self.assertEqual(CronJobLog.objects.all().count(), 1)
+            self.assertEqual(CronJobLog.objects.all().first().end_time, mock_date)
 
 
 class TestCronLoop(TransactionTestCase):
