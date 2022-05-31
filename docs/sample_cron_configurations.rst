@@ -118,6 +118,19 @@ You can set your job to run every week at particular day, for example at Saturda
         RUN_AT_TIMES = ['6:30']
         schedule = Schedule(run_weekly_on_days=RUN_WEEKLY_ON_DAYS, run_at_times=RUN_AT_TIMES)
 
+
+Remove succeeded cron job logs
+--------------------
+``remove_successful_cron_logs`` specifies whether old successful logs should be deleted when a new log is created. Default: False
+
+.. code-block:: python
+
+    class MyCronJob(CronJobBase):
+        remove_successful_cron_logs = True
+        RUN_AT_TIMES = ['6:30']
+        schedule = Schedule(run_weekly_on_days=RUN_WEEKLY_ON_DAYS, run_at_times=RUN_AT_TIMES)
+
+
 Allowing parallels runs
 -----------------------
 
