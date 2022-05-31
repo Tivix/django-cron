@@ -49,6 +49,8 @@ class CronJobBase(object):
     + do - This is the actual business logic to be run at the given schedule
     """
 
+    remove_successful_cron_logs = False
+
     def __init__(self):
         self.prev_success_cron = None
 
@@ -269,6 +271,7 @@ class CronJobManager(object):
                     self.stdout.write(
                         u"[\N{HEAVY CHECK MARK}] {0}\n".format(self.cron_job.code)
                     )
+                self._remove_old_success_job_logs(cron_job_class)
             elif not self.silent:
                 self.stdout.write(u"[ ] {0}\n".format(self.cron_job.code))
 
@@ -288,3 +291,8 @@ class CronJobManager(object):
         if msg is None:
             msg = ''
         self._msg = msg
+
+    def _remove_old_success_job_logs(self, job_class):
+        if job_class.remove_successful_cron_logs or getattr(settings, 'REMOVE_SUCCESSFUL_CRON_LOGS', False):
+            from django_cron.models import CronJobLog
+            CronJobLog.objects.filter(code=job_class.code, is_success=True).exclude(pk=self.cron_log.pk).delete()
