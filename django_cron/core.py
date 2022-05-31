@@ -121,6 +121,7 @@ class CronJobManager(object):
             last_job = (
                 CronJobLog.objects.filter(code=cron_job.code)
                     .order_by('-start_time')
+                    .exclude(start_time__gt=datetime.today())
                     .first()
             )
             if (
@@ -135,8 +136,8 @@ class CronJobManager(object):
         if cron_job.schedule.run_every_mins is not None:
             try:
                 self.previously_ran_successful_cron = CronJobLog.objects.filter(
-                    code=cron_job.code, is_success=True, ran_at_time__isnull=True
-                ).latest('start_time')
+                    code=cron_job.code, is_success=True
+                ).exclude(start_time__gt=datetime.today()).latest('start_time')
             except CronJobLog.DoesNotExist:
                 pass
 
