@@ -25,9 +25,13 @@ class FailedRunsNotificationCronJob(CronJobBase):
             settings, 'FAILED_RUNS_CRONJOB_EMAIL_PREFIX', ''
         )
 
+        min_num_failures_default = getattr(
+            settings, 'DJANGO_CRON_MIN_NUM_FAILURES_DEFAULT', 10
+        )
+        
         for cron in crons_to_check:
 
-            min_failures = getattr(cron, 'MIN_NUM_FAILURES', 10)
+            min_failures = getattr(cron, 'MIN_NUM_FAILURES', min_num_failures_default)
             jobs = CronJobLog.objects.filter(code=cron.code).order_by('-end_time')[
                 :min_failures
             ]
