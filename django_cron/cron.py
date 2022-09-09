@@ -26,7 +26,7 @@ class FailedRunsNotificationCronJob(CronJobBase):
         )
 
         min_num_failures_default = getattr(
-            settings, 'CRON_MIN_NUM_FAILURES_DEFAULT', 10
+            settings, 'DJANGO_CRON_MIN_NUM_FAILURES_DEFAULT', 10
         )
         for cron in crons_to_check:
 
