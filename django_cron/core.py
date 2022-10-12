@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 import traceback
 import time
 import sys
@@ -103,17 +103,18 @@ class CronJobManager(object):
         """
         self.user_time = None
         self.previously_ran_successful_cron = None
+        now = get_current_time()
 
         # If we pass --force options, we force cron run
         if force:
             return True
 
         if cron_job.schedule.run_monthly_on_days is not None:
-            if not datetime.today().day in cron_job.schedule.run_monthly_on_days:
+            if now.day not in cron_job.schedule.run_monthly_on_days:
                 return False
 
         if cron_job.schedule.run_weekly_on_days is not None:
-            if not datetime.today().weekday() in cron_job.schedule.run_weekly_on_days:
+            if now.weekday() not in cron_job.schedule.run_weekly_on_days:
                 return False
 
         if cron_job.schedule.retry_after_failure_mins:
@@ -121,13 +122,13 @@ class CronJobManager(object):
             last_job = (
                 CronJobLog.objects.filter(code=cron_job.code)
                     .order_by('-start_time')
-                    .exclude(start_time__gt=datetime.today())
+                    .exclude(start_time__gt=now)
                     .first()
             )
             if (
                     last_job
                     and not last_job.is_success
-                    and get_current_time() + timedelta(seconds=cron_job.schedule.run_tolerance_seconds)
+                    and now + timedelta(seconds=cron_job.schedule.run_tolerance_seconds)
                     <= last_job.start_time
                     + timedelta(minutes=cron_job.schedule.retry_after_failure_mins)
             ):
@@ -137,13 +138,13 @@ class CronJobManager(object):
             try:
                 self.previously_ran_successful_cron = CronJobLog.objects.filter(
                     code=cron_job.code, is_success=True
-                ).exclude(start_time__gt=datetime.today()).latest('start_time')
+                ).exclude(start_time__gt=now).latest('start_time')
             except CronJobLog.DoesNotExist:
                 pass
 
             if self.previously_ran_successful_cron:
                 if (
-                        get_current_time() + timedelta(seconds=cron_job.schedule.run_tolerance_seconds)
+                        now + timedelta(seconds=cron_job.schedule.run_tolerance_seconds)
                         > self.previously_ran_successful_cron.start_time
                         + timedelta(minutes=cron_job.schedule.run_every_mins)
                 ):
@@ -154,7 +155,6 @@ class CronJobManager(object):
         if cron_job.schedule.run_at_times:
             for time_data in cron_job.schedule.run_at_times:
                 user_time = time.strptime(time_data, "%H:%M")
-                now = get_current_time()
                 actual_time = time.strptime("%s:%s" % (now.hour, now.minute), "%H:%M")
                 if actual_time >= user_time:
                     qset = CronJobLog.objects.filter(
