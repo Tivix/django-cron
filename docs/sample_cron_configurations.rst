@@ -158,7 +158,7 @@ FailedRunsNotificationCronJob
 
 This example cron check last cron jobs results. If they were unsuccessfull 10 times in row, it sends email to user.
 
-Install required dependencies: ``Django>=3.2.0``.
+Install required dependencies: ``Django>=3.2.0``, ``django-common-helpers==0.9.2``.
 
 Add ``django_cron.cron.FailedRunsNotificationCronJob`` to your ``CRON_CLASSES`` in settings file.
 
