@@ -11,6 +11,7 @@ class DjangoCronJobLock(object):
     except DjangoCronJobLock.LockFailedException:
         pass
     """
+
     class LockFailedException(Exception):
         pass
 
@@ -18,7 +19,7 @@ class DjangoCronJobLock(object):
         """
         This method inits the class.
         You should take care of getting all
-        nessesary thing from input parameters here
+        necessary thing from input parameters here
         Base class processes
             * self.job_name
             * self.job_code
@@ -26,8 +27,8 @@ class DjangoCronJobLock(object):
             * self.silent
         for you. The rest is backend-specific.
         """
-        self.job_name = cron_class.__name__
-        self.job_code = cron_class.get_code()
+        self.job_name = '.'.join([cron_class.__module__, cron_class.__name__])
+        self.job_code = cron_class.code
         self.parallel = getattr(cron_class, 'ALLOW_PARALLEL_RUNS', False)
         self.silent = silent
 

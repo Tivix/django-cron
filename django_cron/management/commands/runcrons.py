@@ -16,24 +16,20 @@ DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
 
 class Command(BaseCommand):
     def add_arguments(self, parser):
+        parser.add_argument('cron_classes', nargs='*')
+        parser.add_argument('--force', action='store_true', help='Force cron runs')
         parser.add_argument(
-            'cron_classes',
-            nargs='*'
-        )
-        parser.add_argument(
-            '--force',
-            action='store_true',
-            help='Force cron runs'
-        )
-        parser.add_argument(
-            '--silent',
-            action='store_true',
-            help='Do not push any message on console'
+            '--silent', action='store_true', help='Do not push any message on console'
         )
         parser.add_argument(
             '--dry-run',
             action='store_true',
-            help="Just show what crons would be run; don't actually run them"
+            help="Just show what crons would be run; don't actually run them",
+        )
+        parser.add_argument(
+            '--run_class_list_name',
+            nargs='?',
+            help='Runs all the crons in the specified class list from settings. This is to override CRON_CLASSES hardcoding'
         )
         parser.add_argument(
             '--run_class_list_name',
@@ -87,7 +83,7 @@ class Command(BaseCommand):
                 force=options['force'],
                 silent=options['silent'],
                 dry_run=options['dry_run'],
-                stdout=self.stdout
+                stdout=self.stdout,
             )
 
         clear_old_log_entries()
@@ -106,7 +102,9 @@ def run_cron_with_cache_check(
     @dryrun     - don't actually perform the cron job
     @stdout     - where to write feedback to
     """
-    with CronJobManager(cron_class, silent=silent, dry_run=dry_run, stdout=stdout) as manager:
+    with CronJobManager(
+        cron_class, silent=silent, dry_run=dry_run, stdout=stdout
+    ) as manager:
         manager.run(force)
 
 

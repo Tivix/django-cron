@@ -1,4 +1,5 @@
-from django.utils.translation import ugettext as _
+from django.utils.timezone import now as utc_now, localtime, is_naive
+from django.utils.translation import gettext as _
 from django.template.defaultfilters import pluralize
 
 
@@ -27,3 +28,25 @@ def humanize_duration(duration):
         parts.append(u'%s %s' % (seconds, pluralize(seconds, _('second,seconds'))))
 
     return ', '.join(parts) if len(parts) != 0 else _('< 1 second')
+
+
+def get_class(kls):
+    """
+    Converts a string to a class.
+    Courtesy: http://stackoverflow.com/questions/452969/does-python-have-an-equivalent-to-java-class-forname/452981#452981
+    """
+    parts = kls.split('.')
+
+    if len(parts) == 1:
+        raise ImportError("'{0}'' is not a valid import path".format(kls))
+
+    module = ".".join(parts[:-1])
+    m = __import__(module)
+    for comp in parts[1:]:
+        m = getattr(m, comp)
+    return m
+
+
+def get_current_time():
+    now = utc_now()
+    return now if is_naive(now) else localtime(now)

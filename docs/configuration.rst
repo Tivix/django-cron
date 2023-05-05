@@ -15,5 +15,7 @@ Configuration
 
 **DJANGO_CRON_OUTPUT_ERRORS** - write errors to the logger in addition to storing them in the database, default: ``False``
 
+**REMOVE_SUCCESSFUL_CRON_LOGS** - remove all succeeded cron job logs except the last one for each job, default: ``False``
+
 
 For more details, see :doc:`Sample Cron Configurations <sample_cron_configurations>` and :doc:`Locking backend <locking_backend>`
