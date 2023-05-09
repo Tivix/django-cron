@@ -31,11 +31,6 @@ class Command(BaseCommand):
             nargs='?',
             help='Runs all the crons in the specified class list from settings. This is to override CRON_CLASSES hardcoding'
         )
-        parser.add_argument(
-            '--run_class_list_name',
-            nargs='?',
-            help='Runs all the crons in the specified class list from settings. This is to override CRON_CLASSES hardcoding'
-        )
 
     def handle(self, *args, **options):
         """
