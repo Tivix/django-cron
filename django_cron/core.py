@@ -7,8 +7,11 @@ import sys
 from django.conf import settings
 from django.utils.timezone import now as utc_now
 from django.db.models import Q
-
+from subprocess import check_output
 from django_cron.helpers import get_class, get_current_time
+
+from django_common.helper import send_mail
+
 
 DEFAULT_LOCK_BACKEND = 'django_cron.backends.lock.cache.CacheLock'
 DJANGO_CRON_OUTPUT_ERRORS = False
@@ -48,11 +51,28 @@ class CronJobBase(object):
     Following functions:
     + do - This is the actual business logic to be run at the given schedule
     """
-
+    SEND_FAILED_EMAIL = []
     remove_successful_cron_logs = False
 
     def __init__(self):
         self.prev_success_cron = None
+
+    @classmethod
+    def get_code(self):
+        try:
+            if self.APPEND_IP_TO_CODE:
+                myserverip = None
+                try:
+                    myserverip = check_output(['/usr/bin/ec2metadata', '--public-ipv4'])
+                    myserverip = myserverip.strip()
+                except:
+                    pass
+                if not myserverip:
+                    myserverip = check_output(['hostname', '-I'])
+                    myserverip = myserverip.strip()
+                return self.code + '-' + myserverip.decode('utf-8')
+        except:
+            return self.code
 
     def set_prev_success_cron(self, prev_success_cron):
         self.prev_success_cron = prev_success_cron
@@ -93,6 +113,9 @@ class CronJobManager(object):
         self.write_log = getattr(
             settings, 'DJANGO_CRON_OUTPUT_ERRORS', DJANGO_CRON_OUTPUT_ERRORS
         )
+        self.send_error_email = getattr(settings, 
+                                        'DJANGO_CRON_SEND_IMMEDIATE_ERROR_EMAIL', 
+                                        False)
 
     def should_run_now(self, force=False):
         from django_cron.models import CronJobLog
@@ -177,7 +200,7 @@ class CronJobManager(object):
         cron_log = self.cron_log
 
         cron_job = getattr(self, 'cron_job', self.cron_job_class)
-        cron_log.code = cron_job.code
+        cron_log.code = cron_job.get_code()
 
         cron_log.is_success = kwargs.get('success', True)
         cron_log.message = self.make_log_msg(messages)
@@ -187,6 +210,36 @@ class CronJobManager(object):
 
         if not cron_log.is_success and self.write_log:
             logger.error("%s cronjob error:\n%s" % (cron_log.code, cron_log.message))
+        
+        if self.send_error_email and not cron_log.is_success:
+            from django_cron.models import CronJobLog
+            try:
+                emails = [admin[1] for admin in settings.ADMINS]
+                if getattr(cron_job, "SEND_FAILED_EMAIL", []):
+                    emails.extend(cron_job.SEND_FAILED_EMAIL)
+                
+                failed_runs_cronjob_email_prefix = getattr(settings, 'FAILED_RUNS_CRONJOB_EMAIL_PREFIX', '')
+                min_failures = getattr(cron_job, 'MIN_NUM_FAILURES', 10)
+                if not min_failures:
+                    min_failures = 10
+
+                last_min_cron_status = list(CronJobLog.objects.using("default").filter(
+                        code=cron_log.code).order_by("-end_time").values_list("is_success", flat=True)[:min_failures])
+
+                #All of them should be failed ie false. Then only we have to send email
+                # Send on 3 failures. [True, False, False] ie [success, failed, failed] does not trigger email
+                if not any(last_min_cron_status):
+                    send_mail(
+                        '%s%s failed %s times in a row!' % (
+                            failed_runs_cronjob_email_prefix,
+                            cron_log.code,
+                            min_failures,
+                        ),
+                        cron_log.message,
+                        settings.DEFAULT_FROM_EMAIL, emails
+                    )
+            except Exception as e:
+                logger.exception(e)
 
     def make_log_msg(self, messages):
         full_message = ''
@@ -260,7 +313,7 @@ class CronJobManager(object):
                     logger.debug(
                         "Running cron: %s code %s",
                         cron_job_class.__name__,
-                        self.cron_job.code,
+                        self.cron_job.get_code(),
                     )
                     self.make_log('Job in progress', success=True)
                     self.msg = self.cron_job.do()

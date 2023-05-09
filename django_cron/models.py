@@ -17,11 +17,12 @@ class CronJobLog(models.Model):
     # Jobs that run every X minutes, have this field empty.
     ran_at_time = models.TimeField(null=True, blank=True, db_index=True, editable=False)
 
+    def __unicode__(self):
+        return '%s (%s)' % (self.code, 'Success' if self.is_success else 'Fail')
+    
     def __str__(self):
         return '%s (%s)' % (self.code, 'Success' if self.is_success else 'Fail')
 
-    def __str__(self):
-        return "%s (%s)" % (self.code, "Success" if self.is_success else "Fail")
 
     class Meta:
         index_together = [
