@@ -142,7 +142,7 @@ class CronJobManager(object):
         if cron_job.schedule.retry_after_failure_mins:
             # We check last job - success or not
             last_job = (
-                CronJobLog.objects.filter(code=cron_job.code)
+                CronJobLog.objects.filter(code=cron_job.get_code())
                     .order_by('-start_time')
                     .exclude(start_time__gt=get_current_time())
                     .first()
@@ -159,7 +159,7 @@ class CronJobManager(object):
         if cron_job.schedule.run_every_mins is not None:
             try:
                 self.previously_ran_successful_cron = CronJobLog.objects.filter(
-                    code=cron_job.code, is_success=True
+                    code=cron_job.get_code(), is_success=True
                 ).exclude(start_time__gt=get_current_time()).latest('start_time')
             except CronJobLog.DoesNotExist:
                 pass
@@ -181,7 +181,7 @@ class CronJobManager(object):
                 actual_time = time.strptime("%s:%s" % (now.hour, now.minute), "%H:%M")
                 if actual_time >= user_time:
                     qset = CronJobLog.objects.filter(
-                        code=cron_job.code, ran_at_time=time_data, is_success=True
+                        code=cron_job.get_code(), ran_at_time=time_data, is_success=True
                     ).filter(
                         Q(start_time__gt=now)
                         | Q(
