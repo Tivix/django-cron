@@ -58,5 +58,9 @@ class CronJobLogAdmin(admin.ModelAdmin):
     humanize_duration.admin_order_field = 'duration'
 
 
+class CronJobLockAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'job_name', 'locked')
+    list_filter = ('locked')
+
 admin.site.register(CronJobLog, CronJobLogAdmin)
-admin.site.register(CronJobLock)
+admin.site.register(CronJobLock, CronJobLockAdmin)
