@@ -15,7 +15,7 @@ class CronJobLog(models.Model):
 
     # This field is used to mark jobs executed in exact time.
     # Jobs that run every X minutes, have this field empty.
-    ran_at_time = models.TimeField(null=True, blank=True, db_index=True, editable=False)
+    ran_at_time = models.TimeField(null=True, blank=True, db_index=True, editable=True)
 
     def __unicode__(self):
         return '%s (%s)' % (self.code, 'Success' if self.is_success else 'Fail')
