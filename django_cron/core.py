@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 import traceback
 import time
 import sys
@@ -132,11 +132,11 @@ class CronJobManager(object):
             return True
 
         if cron_job.schedule.run_monthly_on_days is not None:
-            if not datetime.today().day in cron_job.schedule.run_monthly_on_days:
+            if not get_current_time().day in cron_job.schedule.run_monthly_on_days:
                 return False
 
         if cron_job.schedule.run_weekly_on_days is not None:
-            if not datetime.today().weekday() in cron_job.schedule.run_weekly_on_days:
+            if not get_current_time().weekday() in cron_job.schedule.run_weekly_on_days:
                 return False
 
         if cron_job.schedule.retry_after_failure_mins:
@@ -144,7 +144,7 @@ class CronJobManager(object):
             last_job = (
                 CronJobLog.objects.filter(code=cron_job.code)
                     .order_by('-start_time')
-                    .exclude(start_time__gt=datetime.today())
+                    .exclude(start_time__gt=get_current_time())
                     .first()
             )
             if (
@@ -160,7 +160,7 @@ class CronJobManager(object):
             try:
                 self.previously_ran_successful_cron = CronJobLog.objects.filter(
                     code=cron_job.code, is_success=True
-                ).exclude(start_time__gt=datetime.today()).latest('start_time')
+                ).exclude(start_time__gt=get_current_time()).latest('start_time')
             except CronJobLog.DoesNotExist:
                 pass
 
