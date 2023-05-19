@@ -55,7 +55,9 @@ class CacheLock(DjangoCronJobLock):
         return caches[cache_name]
 
     def get_lock_name(self):
-        return self.job_name
+        #We are using IP based codes. Name is Check_Documents_Cron ie the Class name. This is terrible since 2 apps can have the same class name
+        #Code is fmeca.check_documents_cron.203.23.34.56
+        return self.job_code
 
     def get_cache_timeout(self, cron_class):
         try:

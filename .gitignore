@@ -61,3 +61,8 @@ db.sqlite3
 
 # Vim
 *.swp
+#Amber cscope files
+cscope.files
+cscope.out
+mk_cscope
+tags

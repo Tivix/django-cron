@@ -28,7 +28,7 @@ class FailedRunsNotificationCronJob(CronJobBase):
         for cron in crons_to_check:
 
             min_failures = getattr(cron, 'MIN_NUM_FAILURES', 10)
-            jobs = CronJobLog.objects.filter(code=cron.code).order_by('-end_time')[
+            jobs = CronJobLog.objects.filter(code=cron.get_code()).order_by('-end_time')[
                 :min_failures
             ]
             failures = 0

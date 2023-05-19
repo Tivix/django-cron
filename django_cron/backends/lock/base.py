@@ -28,7 +28,7 @@ class DjangoCronJobLock(object):
         for you. The rest is backend-specific.
         """
         self.job_name = '.'.join([cron_class.__module__, cron_class.__name__])
-        self.job_code = cron_class.code
+        self.job_code = cron_class.get_code()
         self.parallel = getattr(cron_class, 'ALLOW_PARALLEL_RUNS', False)
         self.silent = silent
 
@@ -55,7 +55,7 @@ class DjangoCronJobLock(object):
         )
 
     def lock_failed_message(self):
-        return "%s: lock found. Will try later." % self.job_name
+        return "%s: lock found. Will try later." % self.job_code
 
     def __enter__(self):
         if not self.parallel and not self.lock():

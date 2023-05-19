@@ -5,6 +5,7 @@ from datetime import timedelta
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.db import close_old_connections
+from django_common.helper import send_mail
 
 from django_cron import CronJobManager, get_class, get_current_time
 from django_cron.models import CronJobLog
@@ -25,17 +26,28 @@ class Command(BaseCommand):
             action='store_true',
             help="Just show what crons would be run; don't actually run them",
         )
+        parser.add_argument(
+            '--run_class_list_name',
+            nargs='?',
+            help='Runs all the crons in the specified class list from settings. This is to override CRON_CLASSES hardcoding'
+        )
 
     def handle(self, *args, **options):
         """
         Iterates over all the CRON_CLASSES (or if passed in as a commandline argument)
         and runs them.
         """
+
         if not options['silent']:
             self.stdout.write("Running Crons\n")
             self.stdout.write("{0}\n".format("=" * 40))
 
         cron_classes = options['cron_classes']
+
+        if options['run_class_list_name']:
+            list_name = options['run_class_list_name']
+            cron_classes = getattr(settings, list_name, [])
+
         if cron_classes:
             cron_class_names = cron_classes
         else:
@@ -44,11 +56,20 @@ class Command(BaseCommand):
         try:
             crons_to_run = [get_class(x) for x in cron_class_names]
         except ImportError:
+            # Send an email to admin when the module load fails
             error = traceback.format_exc()
-            self.stdout.write(
-                'ERROR: Make sure these are valid cron class names: %s\n\n%s'
-                % (cron_class_names, error)
-            )
+            self.stdout.write('ERROR: Make sure these are valid cron class names: %s\n\n%s' % (cron_class_names, error))
+            try:
+                emails = [admin[1] for admin in settings.ADMINS]
+                failed_runs_cronjob_email_prefix = getattr(settings, 'FAILED_RUNS_CRONJOB_EMAIL_PREFIX', '')
+                send_mail(
+                    "URGENT!!! {} Error while importing crons".format(failed_runs_cronjob_email_prefix),
+                    error,
+                    settings.DEFAULT_FROM_EMAIL, emails
+                )
+            except Exception as e:
+                self.stdout.write(
+                    'ERROR: While sending email: %s' % (e))
             return
 
         for cron_class in crons_to_run:

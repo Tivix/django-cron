@@ -33,5 +33,5 @@ class FileLock(DjangoCronJobLock):
             # let it die if failed, can't run further anyway
             os.makedirs(path, exist_ok=True)
 
-        filename = self.job_name + '.lock'
+        filename = self.job_code + '.lock'
         return os.path.join(path, filename)

@@ -37,7 +37,7 @@ class CronJobLogAdmin(admin.ModelAdmin):
 
     search_fields = ('code', 'message')
     ordering = ('-start_time',)
-    list_display = ('code', 'start_time', 'end_time', 'humanize_duration', 'is_success')
+    list_display = ('code', 'start_time', 'end_time', 'humanize_duration', 'is_success', 'ran_at_time')
     list_filter = ('code', 'start_time', 'is_success', DurationFilter)
 
     def get_queryset(self, request):
@@ -58,5 +58,9 @@ class CronJobLogAdmin(admin.ModelAdmin):
     humanize_duration.admin_order_field = 'duration'
 
 
+class CronJobLockAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'job_name', 'locked')
+    list_filter = ('locked',)
+
 admin.site.register(CronJobLog, CronJobLogAdmin)
-admin.site.register(CronJobLock)
+admin.site.register(CronJobLock, CronJobLockAdmin)
