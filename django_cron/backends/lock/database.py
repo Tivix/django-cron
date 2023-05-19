@@ -11,7 +11,7 @@ class DatabaseLock(DjangoCronJobLock):
 
     @transaction.atomic
     def lock(self):
-        lock, created = CronJobLock.objects.get_or_create(job_name=self.job_name)
+        lock, created = CronJobLock.objects.get_or_create(job_name=self.job_code)
         if lock.locked:
             return False
         else:
@@ -21,6 +21,6 @@ class DatabaseLock(DjangoCronJobLock):
 
     @transaction.atomic
     def release(self):
-        lock = CronJobLock.objects.filter(job_name=self.job_name, locked=True).first()
+        lock = CronJobLock.objects.filter(job_name=self.job_code, locked=True).first()
         lock.locked = False
         lock.save()
