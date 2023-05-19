@@ -41,4 +41,4 @@ class CronJobLock(models.Model):
     locked = models.BooleanField(default=False)
 
     def __str__(self):
-        return '%s' % (self.job_name)
+        return '%s (%s)' % (self.job_name, self.locked)
