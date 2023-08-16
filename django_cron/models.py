@@ -24,13 +24,11 @@ class CronJobLog(models.Model):
         return "%s (%s)" % (self.code, "Success" if self.is_success else "Fail")
 
     class Meta:
-        index_together = [
-            ('code', 'is_success', 'ran_at_time'),
-            ('code', 'start_time', 'ran_at_time'),
-            (
-                'code',
-                'start_time',
-            ),  # useful when finding latest run (order by start_time) of cron
+        indexes = [
+            models.Index(fields=['code', 'is_success', 'ran_at_time']),
+            models.Index(fields=['code', 'start_time', 'ran_at_time']),
+            # useful when finding latest run (order by start_time) of cron
+            models.Index(fields=['code', 'start_time']),
         ]
         app_label = 'django_cron'
 
