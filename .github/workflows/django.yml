@@ -30,4 +30,4 @@ jobs:
         pip install -r test_requirements.txt
     - name: Run Tests
       run: |
-        python runtests.py runtests
+        python -Wall runtests.py runtests
