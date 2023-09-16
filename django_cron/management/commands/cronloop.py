@@ -27,6 +27,9 @@ class Command(BaseCommand):
             type=int,
             help="Repeat only X times.",
         )
+        parser.add_argument(
+            '--silent', action='store_true', help='Do not push any message on console'
+        )
 
     def handle(self, *args, **options):
         s = options['sleep']
@@ -34,18 +37,19 @@ class Command(BaseCommand):
         if not classes:
             classes = []
         repeat = options["repeat"]
+        silent = options['silent']
         if repeat:
             for _ in range(repeat):
-                if self._call_command_or_return_true('runcrons', classes, s):
+                if self._call_command_or_return_true('runcrons', classes, s, silent):
                     break
         else:
             while True:
-                if self._call_command_or_return_true('runcrons', classes, s):
+                if self._call_command_or_return_true('runcrons', classes, s, silent):
                     break
 
-    def _call_command_or_return_true(self, command, classes, s):
+    def _call_command_or_return_true(self, command, classes, s, silent):
         try:
-            call_command(command, *classes)
+            call_command(command, *classes, silent=silent)
             sleep(s)
         except KeyboardInterrupt:
             return True
