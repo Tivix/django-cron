@@ -9,6 +9,8 @@ from django.db import close_old_connections
 from django_cron import CronJobManager, get_class, get_current_time
 from django_cron.models import CronJobLog
 
+from datetime import datetime
+import pytz, os, logging
 
 DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
 
@@ -35,11 +37,38 @@ class Command(BaseCommand):
         Iterates over all the CRON_CLASSES (or if passed in as a commandline argument)
         and runs them.
         """
+
+        main_cron = False
+
         cron_classes = options['cron_classes']
         if cron_classes:
             cron_class_names = cron_classes
         else:
+            #main_cron = True
             cron_class_names = getattr(settings, 'CRON_CLASSES', [])
+
+        if main_cron:
+            #for handler in logging.root.handlers[:]:
+            #    logging.root.removeHandler(handler)
+
+            logger = logging.getLogger(__name__)
+
+            today = datetime.utcnow().replace(tzinfo=pytz.UTC).astimezone(pytz.timezone('Europe/Berlin'))
+            basename = os.path.join(os.path.dirname(__file__),"../../../log/",today.strftime("%Y/%m/%d"))
+            try: os.makedirs(basename)
+            except Exception: pass
+            folder = os.path.normpath(os.path.join(basename,today.strftime("%d-%m-%Y_%H-%M")+"_runcrons.log"))
+
+            handler = logging.FileHandler(folder)
+            handler.setLevel(logging.INFO)
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            handler.setFormatter(formatter)
+            logger.addHandler(handler)
+
+            #logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',filename=folder,level=logging.INFO)
+
+            logger.info("Running crons started "+today.strftime("%d-%m-%Y_%H-%M"))
+            #logger.info("Crons to run: "+ " ".join(cron_class_names))
 
         try:
             crons_to_run = [get_class(x) for x in cron_class_names]
@@ -49,30 +78,46 @@ class Command(BaseCommand):
             return
 
         threads = []
+        single_threaded = []
         for cron_class in crons_to_run:
             if getattr(settings,'DJANGO_CRON_MULTITHREADED',False):
-                ## run all cron jobs in parallel as thread
-                th = threading.Thread(
-                    target = run_cron_with_cache_check, 
-                    kwargs={
-                        "cron_class":cron_class,
-                        "force":options['force'],
-                        "silent":options['silent']
-                    }
-                )
-                th.start()
-                threads.append(th)
-            else:
-                run_cron_with_cache_check(
-                    cron_class,
-                    force=options['force'],
-                    silent=options['silent']
-                )
+                if hasattr(cron_class,"single_threaded") and cron_class.single_threaded:
+                    single_threaded.append(cron_class)
+                else:
+                    ## run all cron jobs in parallel as thread
+                    th = threading.Thread(
+                        target = run_cron_with_cache_check, 
+                        kwargs={
+                            "cron_class":cron_class,
+                            "force":options['force'],
+                            "silent":options['silent']
+                        }
+                    )
+                    if main_cron: logger.info("Thread starting: "+str(cron_class))
+                    th.start()
+                    if main_cron: logger.info("\tdone")
+                    threads.append([th,cron_class])
+            else: single_threaded.append(cron_class)
+
+        for cron_class in single_threaded:
+            print("run singlethreaded: "+str(cron_class))
+            run_cron_with_cache_check(
+                cron_class,
+                force=options['force'],
+                silent=options['silent']
+            )
 
         for th in threads:
-            th.join()
+            if main_cron: logger.info("Wait for thread: "+str(th[1]))
+            th[0].join()
+            if main_cron: logger.info("done")
+        if main_cron: logger.info("clear old log entries")
         clear_old_log_entries()
+        if main_cron: logger.info("done")
+        if main_cron: logger.info("close old connections")
         close_old_connections()
+        if main_cron: logger.info("done")
+        if main_cron: logger.info("exit")
 
 
 def run_cron_with_cache_check(cron_class, force=False, silent=False):
