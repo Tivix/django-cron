@@ -15,6 +15,11 @@ class FileLock(DjangoCronJobLock):
     def lock(self):
         try:
             lock_name = self.get_lock_name()
+            
+            ## just quit, do not touch the file so we have date modified
+            if os.path.exists(lock_name):
+                return False
+
             # need loop to avoid races on file unlinking
             while True:
                 f = open(lock_name, 'wb+', 0)
@@ -54,8 +59,10 @@ class FileLock(DjangoCronJobLock):
         f = self.lockfile
         # unlink before release lock to avoid race
         # see comment in self.lock for description
-        os.unlink(f.name)
-        f.close()
+        try:
+            os.unlink(f.name)
+            f.close()
+        except FileNotFoundError: pass  
 
     def get_lock_name(self):
         default_path = '/tmp'
