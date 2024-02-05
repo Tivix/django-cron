@@ -34,14 +34,16 @@ class Migration(migrations.Migration):
                 ),
             ],
         ),
-        migrations.AlterIndexTogether(
-            name='cronjoblog',
-            index_together=set(
-                [
-                    ('code', 'is_success', 'ran_at_time'),
-                    ('code', 'start_time', 'ran_at_time'),
-                    ('code', 'start_time'),
-                ]
-            ),
+        migrations.AddIndex(
+            model_name='cronjoblog',
+            index=models.Index(fields=['code', 'is_success', 'ran_at_time'], name='cronjoblog_code_success_ran_at_time_idx'),
+        ),
+        migrations.AddIndex(
+            model_name='cronjoblog',
+            index=models.Index(fields=['code', 'start_time', 'ran_at_time'], name='cronjoblog_code_start_time_ran_at_time_idx'),
+        ),
+        migrations.AddIndex(
+            model_name='cronjoblog',
+            index=models.Index(fields=['code', 'start_time'], name='cronjoblog_code_start_time_idx'),
         ),
     ]
