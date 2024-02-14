@@ -307,7 +307,6 @@ class TestRunCrons(TransactionTestCase):
     #     t.join(10)
     #     self.assertEqual(CronJobLog.objects.all().count(), logs_count + 1)
 
-    @skip  # TODO check why the test is failing
     def test_failed_runs_notification(self):
         CronJobLog.objects.all().delete()
 
