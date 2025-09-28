@@ -24,11 +24,7 @@ class CacheLock(DjangoCronJobLock):
         """
         This method sets a cache variable to mark current job as "already running".
         """
-        if self.cache.get(self.lock_name):
-            return False
-        else:
-            self.cache.set(self.lock_name, timezone.now(), self.timeout)
-            return True
+        return self.cache.add(self.lock_name, timezone.now(), self.timeout)
 
     def release(self):
         self.cache.delete(self.lock_name)
