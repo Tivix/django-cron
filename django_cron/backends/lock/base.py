@@ -1,4 +1,4 @@
-class DjangoCronJobLock(object):
+class DjangoCronJobLock:
     """
     The lock class to use in runcrons management command.
     Intendent usage is
@@ -12,10 +12,15 @@ class DjangoCronJobLock(object):
         pass
     """
 
+    job_name: str
+    job_code: str
+    parallel: bool
+    silent: bool
+
     class LockFailedException(Exception):
         pass
 
-    def __init__(self, cron_class, silent, *args, **kwargs):
+    def __init__(self, cron_class: type, silent: bool, *args, **kwargs):
         """
         This method inits the class.
         You should take care of getting all
@@ -27,12 +32,12 @@ class DjangoCronJobLock(object):
             * self.silent
         for you. The rest is backend-specific.
         """
-        self.job_name = '.'.join([cron_class.__module__, cron_class.__name__])
+        self.job_name = f"{cron_class.__module__}.{cron_class.__name__}"
         self.job_code = cron_class.code
-        self.parallel = getattr(cron_class, 'ALLOW_PARALLEL_RUNS', False)
+        self.parallel = getattr(cron_class, "ALLOW_PARALLEL_RUNS", False)
         self.silent = silent
 
-    def lock(self):
+    def lock(self) -> bool:
         """
         This method called to acquire lock. Typically. it will
         be called from __enter__ method.
@@ -41,26 +46,26 @@ class DjangoCronJobLock(object):
         Here you can optionally call self.notice_lock_failed().
         """
         raise NotImplementedError(
-            'You have to implement lock(self) method for your class'
+            "You have to implement lock(self) method for your class"
         )
 
-    def release(self):
+    def release(self) -> None:
         """
         This method called to release lock.
         Tipically called from __exit__ method.
         No need to return anything currently.
         """
         raise NotImplementedError(
-            'You have to implement release(self) method for your class'
+            "You have to implement release(self) method for your class"
         )
 
-    def lock_failed_message(self):
+    def lock_failed_message(self) -> str | list[str]:
         return "%s: lock found. Will try later." % self.job_name
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         if not self.parallel and not self.lock():
             raise self.LockFailedException(self.lock_failed_message())
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type, value, traceback) -> None:
         if not self.parallel:
             self.release()

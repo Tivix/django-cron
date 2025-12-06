@@ -1,0 +1,43 @@
+[build-system]
+requires = ["uv_build>=0.9,<0.10"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""
+
+[project]
+name = "django-cron"
+description = "Running python crons in a Django project"
+version = "0.7.1"
+authors = [
+    {name = "Sumit Chachra", email = "chachra@tivix.com"},
+    {name = "Joren Hammudoglu", email = "jhammudoglu@gmail.com"},
+]
+license = "MIT"
+license-files = ["LICENSE"]
+readme = "README.rst"
+classifiers = [
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Framework :: Django",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "django>=4.2",
+]
+
+[project.urls]
+Repository = "https://github.com/jorenham/django-cron"
+Issues = "https://github.com/jorenham/django-cron/issues"
+
+[dependency-groups]
+dev = [
+    "freezegun==1.5.5",
+    "mock==5.2.0",
+    "django-stubs",
+]

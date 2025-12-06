@@ -1,6 +1,8 @@
-from django_cron.backends.lock.base import DjangoCronJobLock
-from django_cron.models import CronJobLock
 from django.db import transaction
+
+from django_cron.models import CronJobLock
+
+from .base import DjangoCronJobLock
 
 
 class DatabaseLock(DjangoCronJobLock):
@@ -10,17 +12,17 @@ class DatabaseLock(DjangoCronJobLock):
     """
 
     @transaction.atomic
-    def lock(self):
-        lock, created = CronJobLock.objects.get_or_create(job_name=self.job_name)
+    def lock(self) -> bool:
+        lock, _ = CronJobLock.objects.get_or_create(job_name=self.job_name)
         if lock.locked:
             return False
-        else:
-            lock.locked = True
-            lock.save()
-            return True
+
+        lock.locked = True
+        lock.save(update_fields=["locked"])
+        return True
 
     @transaction.atomic
     def release(self):
-        lock = CronJobLock.objects.filter(job_name=self.job_name, locked=True).first()
+        lock = CronJobLock.objects.filter(job_name=self.job_name, locked=True)[0]
         lock.locked = False
-        lock.save()
+        lock.save(update_fields=["locked"])

@@ -1,4 +1,4 @@
-from time import sleep
+import time
 
 from django.core.management import BaseCommand, call_command
 
@@ -29,7 +29,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        s = options['sleep']
+        s: float = options["sleep"]
         classes = options['cron_classes']
         if not classes:
             classes = []
@@ -43,9 +43,9 @@ class Command(BaseCommand):
                 if self._call_command_or_return_true('runcrons', classes, s):
                     break
 
-    def _call_command_or_return_true(self, command, classes, s):
+    def _call_command_or_return_true(self, command, classes, s: float):
         try:
             call_command(command, *classes)
-            sleep(s)
+            time.sleep(s)
         except KeyboardInterrupt:
             return True

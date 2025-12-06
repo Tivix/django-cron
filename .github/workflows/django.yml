@@ -1,33 +1,39 @@
-name: Django CI
+name: CI
+permissions: read-all
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
   pull_request:
-    branches: [ master ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  UV_LOCKED: 1
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     strategy:
-      max-parallel: 4
+      fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install .
-    - name: Install Test Dependencies
-      run: |
-        pip install -r test_requirements.txt
-    - name: Run Tests
-      run: |
-        python runtests.py runtests
+      - uses: actions/checkout@v6.0.1
+
+      - uses: astral-sh/setup-uv@v7.1.4
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: django-admin check
+        run: uv run testmanage.py check
+
+      - name: django-admin test
+        run: uv run testmanage.py test

@@ -1,8 +1,8 @@
 from django.conf import settings
-from django.core.cache import caches
+from django.core.cache import BaseCache, caches
 from django.utils import timezone
 
-from django_cron.backends.lock.base import DjangoCronJobLock
+from .base import DjangoCronJobLock
 
 
 class CacheLock(DjangoCronJobLock):
@@ -13,7 +13,11 @@ class CacheLock(DjangoCronJobLock):
 
     DEFAULT_LOCK_TIME = 24 * 60 * 60  # 24 hours
 
-    def __init__(self, cron_class, *args, **kwargs):
+    cache: BaseCache
+    lock_name: str
+    timeout: float
+
+    def __init__(self, cron_class: type, *args, **kwargs):
         super().__init__(cron_class, *args, **kwargs)
 
         self.cache = self.get_cache_by_name()
@@ -57,12 +61,12 @@ class CacheLock(DjangoCronJobLock):
     def get_lock_name(self):
         return self.job_name
 
-    def get_cache_timeout(self, cron_class):
+    def get_cache_timeout(self, cron_class: type) -> float:
         try:
             timeout = getattr(
-                cron_class, 'DJANGO_CRON_LOCK_TIME', settings.DJANGO_CRON_LOCK_TIME
+                cron_class, "DJANGO_CRON_LOCK_TIME", settings.DJANGO_CRON_LOCK_TIME
             )
-        except:
+        except Exception:
             timeout = self.DEFAULT_LOCK_TIME
         return timeout
 

@@ -7,32 +7,34 @@ class CronJobLog(models.Model):
     messages if they failed.
     """
 
-    code = models.CharField(max_length=64, db_index=True)
-    start_time = models.DateTimeField(db_index=True)
-    end_time = models.DateTimeField(db_index=True)
+    id: int
+
+    code = models.CharField(max_length=64)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
     is_success = models.BooleanField(default=False)
-    message = models.TextField(default='', blank=True)  # TODO: db_index=True
+    message = models.TextField(default="", blank=True)
 
     # This field is used to mark jobs executed in exact time.
     # Jobs that run every X minutes, have this field empty.
-    ran_at_time = models.TimeField(null=True, blank=True, db_index=True, editable=False)
-
-    def __unicode__(self):
-        return '%s (%s)' % (self.code, 'Success' if self.is_success else 'Fail')
+    ran_at_time = models.TimeField(null=True, blank=True, editable=False)
 
     def __str__(self):
-        return "%s (%s)" % (self.code, "Success" if self.is_success else "Fail")
+        status = "Success" if self.is_success else "Fail"
+        return f"{self.code} ({status})"
 
     class Meta:
-        index_together = [
-            ('code', 'is_success', 'ran_at_time'),
-            ('code', 'start_time', 'ran_at_time'),
-            (
-                'code',
-                'start_time',
-            ),  # useful when finding latest run (order by start_time) of cron
-        ]
-        app_label = 'django_cron'
+        app_label = "django_cron"
+        get_latest_by = "start_time"
+        indexes = (
+            models.Index(fields=["code"]),
+            models.Index(fields=["start_time"]),
+            models.Index(fields=["end_time"]),
+            models.Index(fields=["ran_at_time"]),
+            models.Index(fields=["code", "start_time"]),
+            models.Index(fields=["code", "start_time", "ran_at_time"]),
+            models.Index(fields=["code", "is_success", "ran_at_time"]),
+        )
 
 
 class CronJobLock(models.Model):
